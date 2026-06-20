@@ -1,0 +1,82 @@
+﻿{% extends "base.html" %}
+{% block title %}{% if language == "zh" %}我的需求 - 书搜搜{% else %}My Requests - BookSearch{% endif %}{% endblock %}
+{% block content %}
+
+<div style="max-width:800px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 style="color:#8B4513;margin:0;">
+            {% if language == "zh" %}🎯 我的需求{% else %}🎯 My Requests{% endif %}
+        </h2>
+        <div style="display:flex;gap:8px;">
+            <form method="post" action="/exchange/match-all" style="display:inline;">
+                <button type="submit" class="btn btn-primary" style="background:#5D8AA8;">
+                    {% if language == "zh" %}🔍 全部匹配{% else %}🔍 Match All{% endif %}
+                </button>
+            </form>
+            <a href="/exchange/request/new" class="btn btn-primary">
+                {% if language == "zh" %}+ 挂新需求{% else %}+ New Request{% endif %}
+            </a>
+        </div>
+    </div>
+    
+    {% if requests %}
+        {% for req in requests %}
+        <div class="forum-post-card" style="margin-bottom:15px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div style="flex:1;">
+                    <div style="font-weight:bold;margin-bottom:5px;">{{ req.description[:80] }}{% if req.description|length > 80 %}...{% endif %}</div>
+                    <div style="font-size:0.85em;color:#999;">
+                        {{ req.created_at }}
+                        {% if req.is_active %}
+                            <span style="color:#2e7d32;margin-left:10px;">✅ {% if language == "zh" %}活跃中{% else %}Active{% endif %}</span>
+                        {% else %}
+                            <span style="color:#999;margin-left:10px;">🔒 {% if language == "zh" %}已关闭{% else %}Closed{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if req.is_active %}
+                <form method="post" action="/exchange/request/{{ req.id }}/close" style="margin-left:10px;">
+                    <button type="submit" class="btn btn-secondary" style="padding:3px 10px;font-size:0.85em;"
+                            onclick="return confirm('{% if language == "zh" %}关闭需求？{% else %}Close this request?{% endif %}')">
+                        {% if language == "zh" %}关闭{% else %}Close{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            
+            {% if req.matches %}
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
+                <div style="font-size:0.9em;font-weight:bold;color:#8B4513;margin-bottom:5px;">
+                    📬 {% if language == "zh" %}匹配结果：{% else %}Matches:{% endif %}
+                </div>
+                {% for match in req.matches %}
+                <div style="background:#f5f0eb;padding:8px 12px;border-radius:6px;margin-bottom:5px;">
+                    <a href="/exchange/{{ match.book_id }}" style="text-decoration:none;">
+                        <strong style="color:#8B4513;">📘 {{ match.book_name }}</strong>
+                        {% if match.author %}<span style="color:#666;font-size:0.9em;"> - {{ match.author }}</span>{% endif %}
+                    </a>
+                    <div style="color:#555;font-size:0.9em;margin-top:3px;">
+                        💡 {{ match.reason }}
+                    </div>
+                    <div style="color:#999;font-size:0.8em;">{{ match.created_at }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:40px;color:#999;">
+        <p>{% if language == "zh" %}还没有挂过需求{% else %}No requests yet{% endif %}</p>
+        <a href="/exchange/request/new" class="btn btn-primary" style="margin-top:15px;">
+            {% if language == "zh" %}🎯 挂一个需求{% else %}🎯 Submit a Request{% endif %}
+        </a>
+    </div>
+    {% endif %}
+    
+    <div style="margin-top:20px;">
+        <a href="/exchange/" class="btn btn-secondary">← {% if language == "zh" %}返回借阅列表{% else %}Back to Book List{% endif %}</a>
+    </div>
+</div>
+
+{% endblock %}

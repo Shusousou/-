@@ -1,0 +1,36 @@
+﻿{% extends "base.html" %}
+{% block title %}{% if language == "zh" %}挂需求 - 书搜搜{% else %}New Request - BookSearch{% endif %}{% endblock %}
+{% block content %}
+
+<div class="form-container">
+    <h2>{% if language == "zh" %}🎯 挂需求{% else %}🎯 Request a Book{% endif %}</h2>
+    <p style="color:#888;font-size:0.9em;margin-bottom:20px;">
+        {% if language == "zh" %}
+        描述你想要的书籍类型、能接受的状况等，系统会自动匹配上架图书。
+        {% else %}
+        Describe what books you want. System will auto-match available books.
+        {% endif %}
+    </p>
+    
+    <form method="post" action="/exchange/request/new">
+        <div class="form-group">
+            <label for="description">
+                {% if language == "zh" %}📝 需求描述 *{% else %}📝 Description *{% endif %}
+            </label>
+            <textarea id="description" name="description" rows="5" required
+                      placeholder="{% if language == "zh" %}例如：求计算机入门书籍，Python最好，可以接受笔迹和涂画\n或者：求小说类书籍，东野圭吾的优先{% else %}e.g. Looking for computer science books, Python preferred, okay with notes/highlights{% endif %}"></textarea>
+        </div>
+        
+        <button type="submit" class="form-submit">
+            {% if language == "zh" %}提交并匹配{% else %}Submit & Match{% endif %}
+        </button>
+    </form>
+    
+    <div style="margin-top:15px;">
+        <a href="/exchange/my-requests" class="btn btn-secondary">
+            {% if language == "zh" %}📋 查看我的需求{% else %}📋 View My Requests{% endif %}
+        </a>
+    </div>
+</div>
+
+{% endblock %}

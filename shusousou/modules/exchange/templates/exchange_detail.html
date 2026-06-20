@@ -1,0 +1,99 @@
+﻿{% extends "base.html" %}
+{% block title %}{{ book.book_name }} - 书搜搜{% endblock %}
+{% block content %}
+
+<div style="max-width:800px;margin:0 auto;">
+    <!-- 图书信息 -->
+    <div class="forum-post-card">
+        <h2 style="margin:0 0 10px;color:#8B4513;">📘 {{ book.book_name }}</h2>
+        
+        <div style="display:flex;gap:15px;font-size:0.9em;color:#666;margin-bottom:10px;flex-wrap:wrap;">
+            {% if book.author %}<span>✍️ {{ book.author }}</span>{% endif %}
+            <span>👤 {{ language == "zh" and "发布者：" or "Posted by: " }}{{ book.owner }}</span>
+            <span>{{ book.created_at }}</span>
+            {% if book.status == "available" %}
+                <span style="color:#2e7d32;">✅ {{ language == "zh" and "可借" or "Available" }}</span>
+            {% else %}
+                <span style="color:#999;">🔒 {{ language == "zh" and "已下架" or "Closed" }}</span>
+            {% endif %}
+        </div>
+        
+        {% if book.requirements %}
+        <div style="background:#f5f0eb;padding:10px 15px;border-radius:8px;margin-bottom:10px;">
+            <strong>📋 {{ language == "zh" and "借阅要求" or "Requirements" }}：</strong>
+            <p style="margin:5px 0 0;color:#555;">{{ book.requirements }}</p>
+        </div>
+        {% endif %}
+        
+        {% if book.expectations %}
+        <div style="background:#f5f0eb;padding:10px 15px;border-radius:8px;margin-bottom:10px;">
+            <strong>💬 {{ language == "zh" and "期望说明" or "Expectations" }}：</strong>
+            <p style="margin:5px 0 0;color:#555;">{{ book.expectations }}</p>
+        </div>
+        {% endif %}
+        
+        {% if book.status == "available" and current_user.id != book.owner_id %}
+        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;text-align:center;color:#999;font-size:0.9em;">
+            {{ language == "zh" and "想借这本书？给发布者发消息协商吧！" or "Want to borrow? Send a message below!" }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 站内评论区 -->
+    <div style="margin-top:20px;">
+        <h3 style="color:#8B4513;">
+            💬 {{ language == "zh" and "站内沟通" or "Messages" }}（{{ messages|length }}）
+        </h3>
+        
+        {% if messages %}
+            {% for msg in messages %}
+            <div style="background:#fafafa;padding:12px 15px;border-radius:8px;margin-bottom:10px;
+                        border-left:3px solid {% if msg.sender_id == current_user.id %}#8B4513{% else %}#D2B48C{% endif %};
+                        {% if msg.sender_id == current_user.id %}text-align:right;{% endif %}">
+                <div style="display:flex;justify-content:{% if msg.sender_id == current_user.id %}flex-end{% else %}space-between{% endif %};
+                            font-size:0.85em;color:#999;margin-bottom:5px;">
+                    <span>👤 {{ msg.sender }}</span>
+                    <span>{{ msg.created_at }}</span>
+                </div>
+                <div style="color:#333;">{{ msg.content }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:#999;text-align:center;padding:20px;">
+                {{ language == "zh" and "暂无消息" or "No messages yet" }}
+            </p>
+        {% endif %}
+        
+        <!-- 发送消息 -->
+        {% if book.status == "available" %}
+        <form method="post" action="/exchange/{{ book.id }}/message" style="margin-top:15px;">
+            <div class="form-group">
+                <textarea name="content" rows="3" required
+                          placeholder="{{ language == "zh" and '写下你想说的话...' or 'Write your message...' }}"
+                          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                {{ language == "zh" and "发送消息" or "Send" }}
+            </button>
+        </form>
+        {% endif %}
+        
+        <!-- 发布者可以下架 -->
+        {% if current_user.id == book.owner_id and book.status == "available" %}
+        <form method="post" action="/exchange/{{ book.id }}/close" style="margin-top:15px;">
+            <button type="submit" class="btn btn-secondary" style="background:#f44336;color:#fff;"
+                    onclick="return confirm('{{ language == "zh" and "确定下架？" or "Close this listing?" }}')">
+                {{ language == "zh" and "下架图书" or "Close Listing" }}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    
+    <div style="margin-top:20px;">
+        <a href="/exchange/" class="btn btn-secondary">
+            ← {{ language == "zh" and "返回列表" or "Back to List" }}
+        </a>
+    </div>
+</div>
+
+{% endblock %}

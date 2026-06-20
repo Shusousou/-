@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                📚 {{ site_name }}
+            </a>
+            <div class="nav-links">
+                <a href="/">
+                    {% if language == "zh" %}首页{% else %}Home{% endif %}
+                </a>
+                <a href="/search">
+                    {% if language == "zh" %}书搜搜{% else %}Search{% endif %}
+                </a>
+                <a href="/forum">
+                    {% if language == "zh" %}论坛{% else %}Forum{% endif %}
+                </a>
+                <a href="/exchange">
+                    {% if language == "zh" %}交换{% else %}Exchange{% endif %}
+                </a>
+                {% if current_user %}
+                    <a href="/profile">
+                        {% if language == "zh" %}我的{% else %}Profile{% endif %}
+                        ({{ current_user.username }})
+                    </a>
+                    <a href="/auth/logout">
+                        {% if language == "zh" %}退出{% else %}Logout{% endif %}
+                    </a>
+                {% else %}
+                    <a href="/auth/login">
+                        {% if language == "zh" %}登录{% else %}Login{% endif %}
+                    </a>
+                    <a href="/auth/register">
+                        {% if language == "zh" %}注册{% else %}Register{% endif %}
+                    </a>
+                {% endif %}
+                <button class="lang-btn" onclick="switchLanguage()">
+                    {% if language == "zh" %}EN{% else %}中文{% endif %}
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面内容 -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>
+                {% if language == "zh" %}
+                    📚 书搜搜 - 智能校园图书推荐平台
+                {% else %}
+                    📚 BookSearch - Smart Campus Book Platform
+                {% endif %}
+            </p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+        // 语言切换函数
+        function switchLanguage() {
+            let currentLang = "{{ language }}";
+            let targetLang = currentLang === "zh" ? "en" : "zh";
+            
+            // 获取当前URL
+            let url = new URL(window.location.href);
+            url.searchParams.set("lang", targetLang);
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+﻿{% extends "base.html" %}
+{% block title %}{% if language == "zh" %}发帖 - 书搜搜{% else %}New Post - BookSearch{% endif %}{% endblock %}
+{% block content %}
+
+<div class="form-container">
+    <h2>{% if language == "zh" %}✏️ 发表书评{% else %}✏️ Write a Review{% endif %}</h2>
+    
+    <form method="post" action="/forum/new">
+        <div class="form-group">
+            <label for="book_name">
+                {% if language == "zh" %}📖 书名 *{% else %}📖 Book Name *{% endif %}
+            </label>
+            <input type="text" id="book_name" name="book_name" required
+                   placeholder="{% if language == "zh" %}例如：机器学习{% else %}e.g. Machine Learning{% endif %}">
+        </div>
+        
+        <div class="form-group">
+            <label for="author">
+                {% if language == "zh" %}✍️ 作者{% else %}✍️ Author{% endif %}
+            </label>
+            <input type="text" id="author" name="author"
+                   placeholder="{% if language == "zh" %}可选{% else %}Optional{% endif %}">
+        </div>
+        
+        <div class="form-group">
+            <label for="category">
+                {% if language == "zh" %}📂 分类{% else %}📂 Category{% endif %}
+            </label>
+            <select id="category" name="category">
+                <option value="">--</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="content">
+                {% if language == "zh" %}💬 书评内容 *{% else %}💬 Review *{% endif %}
+            </label>
+            <textarea id="content" name="content" rows="6" required
+                      placeholder="{% if language == "zh" %}分享你的阅读心得...{% else %}Share your thoughts...{% endif %}"></textarea>
+        </div>
+        
+        <button type="submit" class="form-submit">
+            {% if language == "zh" %}发布{% else %}Publish{% endif %}
+        </button>
+    </form>
+</div>
+
+{% endblock %}

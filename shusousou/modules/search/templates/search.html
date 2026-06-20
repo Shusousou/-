@@ -1,0 +1,162 @@
+﻿{% extends "base.html" %}
+{% block title %}{% if language == "zh" %}书搜搜 - 搜索{% else %}BookSearch - Search{% endif %}{% endblock %}
+{% block content %}
+
+<div class="search-section">
+    <h2 style="text-align:center;margin-bottom:20px;color:#8B4513;">
+        {% if language == "zh" %}🔍 告诉我你想看什么书{% else %}🔍 Tell me what you want to read{% endif %}
+    </h2>
+    
+    <form method="post" action="/search/" class="search-box" id="searchForm">
+        <input type="text" name="query" class="search-input" 
+               placeholder="{% if language == "zh" %}例如：我想看机器学习的入门书{% else %}e.g. I want to learn machine learning{% endif %}"
+               value="{{ query }}" required>
+        <button type="submit" class="search-btn" id="searchBtn">
+            {% if language == "zh" %}搜书{% else %}Search{% endif %}
+        </button>
+    </form>
+</div>
+
+<!-- 加载动画 -->
+<div id="loading" style="display:none;text-align:center;padding:40px;">
+    <div style="font-size:48px;margin-bottom:15px;">📚</div>
+    <div style="font-size:1.2em;color:#8B4513;margin-bottom:10px;">
+        {% if language == "zh" %}努力翻找中...{% else %}Searching the shelves...{% endif %}
+    </div>
+    <div style="font-size:0.9em;color:#999;">
+        {% if language == "zh" %}AI正在分析你的需求，翻遍图书馆找好书{% else %}AI is analyzing your request and searching the library{% endif %}
+    </div>
+    <div style="margin-top:15px;">
+        <span class="loading-dot">.</span>
+        <span class="loading-dot">.</span>
+        <span class="loading-dot">.</span>
+    </div>
+</div>
+
+<script>
+    document.getElementById("searchForm").addEventListener("submit", function() {
+        document.getElementById("searchForm").style.display = "none";
+        document.getElementById("loading").style.display = "block";
+    });
+</script>
+
+<style>
+    .loading-dot {
+        font-size: 48px;
+        color: #8B4513;
+        animation: blink 1.4s infinite both;
+    }
+    .loading-dot:nth-child(1) { animation-delay: 0s; }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+        0% { opacity: 0.2; }
+        20% { opacity: 1; }
+        100% { opacity: 0.2; }
+    }
+</style>
+
+{% if error %}
+<div class="message message-error">{{ error }}</div>
+{% endif %}
+
+{% if keywords %}
+<div style="color:#999;margin-bottom:15px;font-size:0.9em;">
+    {% if language == "zh" %}🔎 搜索关键词：{% else %}🔎 Keywords:{% endif %}
+    {% for kw in keywords %}
+        <span style="background:#f0ebe6;padding:2px 8px;border-radius:4px;margin:0 3px;">{{ kw }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if results %}
+<div class="results">
+    {% for book in results %}
+    <div class="result-card">
+        <h3>📘 {{ book.title }}</h3>
+        <div class="book-meta">
+            <span>✍️ {{ book.author }}</span>
+            {% if book.isbn %}<span>📖 ISBN: {{ book.isbn }}</span>{% endif %}
+        </div>
+        
+        <!-- 图书馆状态 -->
+        <div style="margin:8px 0;">
+            {% if book.library_status == "available" %}
+                <span class="status-tag status-available">
+                    {% if language == "zh" %}✅ 在馆{% else %}✅ Available{% endif %}
+                    {% if book.library_location %}（{{ book.library_location }}）{% endif %}
+                </span>
+            {% elif book.library_status == "borrowed" %}
+                <span class="status-tag status-borrowed">
+                    {% if language == "zh" %}⏳ 已借出，预计 {{ book.library_due_date }} 归还{% else %}⏳ Borrowed, due {{ book.library_due_date }}{% endif %}
+                </span>
+            {% else %}
+                <span class="status-tag status-notfound">
+                    {% if language == "zh" %}📝 未在图书馆找到{% else %}📝 Not found in library{% endif %}
+                </span>
+            {% endif %}
+        </div>
+        
+        <!-- AI推荐理由 -->
+        {% if book.reason %}
+        <div class="ai-reason">
+            <strong>💡 {% if language == "zh" %}AI推荐：{% else %}AI says:{% endif %}</strong>
+            {{ book.reason }}
+        </div>
+        {% endif %}
+        
+        <!-- 详细阅读建议 -->
+        {% if book.detail %}
+        <div class="ai-reason" style="background:#f5f0eb;border-left:3px solid #A0522D;">
+            <strong>📖 {% if language == "zh" %}阅读建议：{% else %}Reading Tips:{% endif %}</strong>
+            {{ book.detail }}
+        </div>
+        {% endif %}
+        
+        <!-- 论坛评论 -->
+        {% if book.forum_posts %}
+        <div class="comment-summary">
+            <strong>💬 {% if language == "zh" %}书友评论：{% else %}Comments:{% endif %}</strong>
+            {% for post in book.forum_posts[:3] %}
+            <div class="comment-item">
+                <a href="/forum/{{ post.post_id }}" style="color:#666;text-decoration:none;">
+                    <span style="color:#8B4513;">{{ post.username }}</span>：
+                    "{{ post.content }}"
+                    👍 {{ post.likes }}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- 交换信息 -->
+        {% if book.exchange_books %}
+        <div class="comment-summary">
+            <strong>🔄 {% if language == "zh" %}交换信息：{% else %}Exchange:{% endif %}</strong>
+            {% for eb in book.exchange_books %}
+            <div class="comment-item">
+                {% if language == "zh" %}
+                    <span style="color:#1565C0;">{{ eb.owner }}</span> 愿意交换 →
+                    <a href="/exchange/{{ eb.book_id }}/chat" class="btn btn-secondary" style="padding:2px 10px;font-size:0.85em;">
+                        联系TA
+                    </a>
+                {% else %}
+                    <span style="color:#1565C0;">{{ eb.owner }}</span> wants to exchange →
+                    <a href="/exchange/{{ eb.book_id }}/chat" class="btn btn-secondary" style="padding:2px 10px;font-size:0.85em;">
+                        Contact
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% elif results is not none %}
+<p style="text-align:center;color:#999;margin-top:30px;">
+    {% if language == "zh" %}没有找到相关图书，试试换个关键词？{% else %}No results found. Try different keywords?{% endif %}
+</p>
+{% endif %}
+
+{% endblock %}

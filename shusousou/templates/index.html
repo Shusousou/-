@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if language == "zh" %}书搜搜 - 首页{% else %}BookSearch - Home{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>
+        {% if language == "zh" %}
+            欢迎来到书搜搜 📚
+        {% else %}
+            Welcome to BookSearch 📚
+        {% endif %}
+    </h1>
+    <p class="hero-description">
+        {% if language == "zh" %}
+            用AI找到你想读的书，与书友分享阅读的快乐
+        {% else %}
+            Find books you love with AI, share reading joy with friends
+        {% endif %}
+    </p>
+    <div class="hero-actions">
+        <a href="/search" class="btn btn-primary">
+            {% if language == "zh" %}🔍 开始搜书{% else %}🔍 Start Searching{% endif %}
+        </a>
+        <a href="/forum" class="btn btn-secondary">
+            {% if language == "zh" %}💬 逛逛论坛{% else %}💬 Visit Forum{% endif %}
+        </a>
+        <a href="/exchange" class="btn btn-secondary">
+            {% if language == "zh" %}🔄 书籍交换{% else %}🔄 Book Exchange{% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="features">
+    <div class="feature-card">
+        <h3>🤖 AI推荐</h3>
+        <p>
+            {% if language == "zh" %}
+                输入你想看的书，AI为你智能推荐
+            {% else %}
+                Tell us what you want, AI recommends the best
+            {% endif %}
+        </p>
+    </div>
+    <div class="feature-card">
+        <h3>💬 好书论坛</h3>
+        <p>
+            {% if language == "zh" %}
+                分享你的阅读心得，发现更多好书
+            {% else %}
+                Share your reading thoughts, discover great books
+            {% endif %}
+        </p>
+    </div>
+    <div class="feature-card">
+        <h3>🔄 书籍交换</h3>
+        <p>
+            {% if language == "zh" %}
+                看完的书挂上来，和书友交换借阅
+            {% else %}
+                List your books, exchange with fellow readers
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+﻿{% extends "base.html" %}
+{% block title %}{{ post.book_name }} - 书搜搜{% endblock %}
+{% block content %}
+
+<div style="max-width:800px;margin:0 auto;">
+    <!-- 帖子主体 -->
+    <div class="forum-post-card">
+        <h2 style="margin:0 0 10px;color:#8B4513;">📖 {{ post.book_name }}</h2>
+        
+        <div style="display:flex;gap:15px;font-size:0.9em;color:#666;margin-bottom:10px;flex-wrap:wrap;">
+            {% if post.author %}<span>✍️ {{ post.author }}</span>{% endif %}
+            {% if post.category %}<span class="category-tag">{{ post.category }}</span>{% endif %}
+            <span>👤 {{ post.username }}</span>
+            <span>{{ post.created_at }}</span>
+        </div>
+        
+        <!-- 馆藏状态 -->
+        {% if library %}
+        <div style="background:#f5f0eb;padding:10px 15px;border-radius:8px;margin-bottom:15px;font-size:0.9em;">
+            {% if library.status == "available" %}
+                <span style="color:#2e7d32;">✅ {% if language == "zh" %}图书馆在馆{% else %}Available in library{% endif %}</span>
+                {% if library.location %} — {{ library.location }}{% endif %}
+            {% elif library.status == "borrowed" %}
+                <span style="color:#e65100;">⏳ {% if language == "zh" %}已借出，预计 {{ library.due_date }} 归还{% else %}Borrowed, due {{ library.due_date }}{% endif %}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- 内容 -->
+        <div style="line-height:1.8;color:#333;white-space:pre-wrap;">{{ post.content }}</div>
+        
+        <!-- 点赞 -->
+        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;">
+            <form method="post" action="/forum/{{ post.id }}/like" style="display:inline;">
+                <button type="submit" class="btn {% if liked %}btn-primary{% else %}btn-secondary{% endif %}" 
+                        style="padding:5px 15px;">
+                    {% if liked %}
+                        ❤️ {{ like_count }}
+                    {% else %}
+                        🤍 {{ like_count }}
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 评论列表 -->
+    <div style="margin-top:20px;">
+        <h3 style="color:#8B4513;">
+            💬 {% if language == "zh" %}评论 ({{ comments|length }}){% else %}Comments ({{ comments|length }}){% endif %}
+        </h3>
+        
+        {% if comments %}
+            {% for comment in comments %}
+            <div style="background:#fafafa;padding:12px 15px;border-radius:8px;margin-bottom:10px;border-left:3px solid #D2B48C;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85em;color:#999;margin-bottom:5px;">
+                    <span>👤 {{ comment.username }}</span>
+                    <span>{{ comment.created_at }}</span>
+                </div>
+                <div style="color:#333;">{{ comment.content }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:#999;text-align:center;padding:20px;">
+                {% if language == "zh" %}暂无评论{% else %}No comments yet{% endif %}
+            </p>
+        {% endif %}
+        
+        <!-- 评论框 -->
+        <form method="post" action="/forum/{{ post.id }}/comment" style="margin-top:15px;">
+            <div class="form-group">
+                <textarea name="content" rows="3" required
+                          placeholder="{% if language == "zh" %}写下你的观点...{% else %}Write your comment...{% endif %}"
+                          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                {% if language == "zh" %}回复{% else %}Reply{% endif %}
+            </button>
+        </form>
+    </div>
+    
+    <!-- 返回 -->
+    <div style="margin-top:20px;">
+        <a href="/forum/" class="btn btn-secondary">
+            {% if language == "zh" %}← 返回论坛{% else %}← Back to Forum{% endif %}
+        </a>
+    </div>
+</div>
+
+{% endblock %}
