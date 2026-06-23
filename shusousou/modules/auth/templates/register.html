@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if language == "zh" %}注册 - 书搜搜{% else %}Register - BookSearch{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .register-wrapper {
+        font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
+    .register-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        width: 100%;
+        max-width: 400px;
+        padding: 2.5rem 2rem 2.2rem;
+        border-radius: 36px;
+        box-shadow: 0 20px 40px -12px rgba(0, 20, 30, 0.25),
+                    0 8px 24px -6px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        transition: transform 0.2s ease;
+    }
+
+    .register-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .register-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .register-header h1 {
+        font-size: 2.2rem;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+        color: #1a2639;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .register-header h1 i {
+        color: #3b6ea5;
+        font-size: 2rem;
+        opacity: 0.8;
+    }
+
+    .register-header .sub {
+        font-size: 0.9rem;
+        color: #5e6f8d;
+        margin-top: 0.3rem;
+        font-weight: 400;
+        border-top: 1px solid rgba(59, 110, 165, 0.15);
+        padding-top: 0.6rem;
+        display: inline-block;
+    }
+
+    .input-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .input-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #2c3e5a;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.3px;
+    }
+
+    .input-group label i {
+        margin-right: 8px;
+        color: #3b6ea5;
+        width: 1.2rem;
+        text-align: center;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 0.85rem 1rem 0.85rem 2.8rem;
+        font-size: 1rem;
+        border: 1.5px solid #dce2ec;
+        border-radius: 60px;
+        background: white;
+        transition: all 0.2s;
+        color: #1e2b3c;
+        outline: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .input-group input:focus {
+        border-color: #3b6ea5;
+        box-shadow: 0 4px 12px rgba(59, 110, 165, 0.15);
+        background: #ffffff;
+    }
+
+    .input-group input::placeholder {
+        color: #a5b6cc;
+        font-weight: 300;
+        font-size: 0.95rem;
+    }
+
+    .input-group .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 2.55rem;
+        color: #7b8ba3;
+        font-size: 1.1rem;
+        pointer-events: none;
+        transition: color 0.2s;
+    }
+
+    .input-group input:focus ~ .input-icon {
+        color: #3b6ea5;
+    }
+
+    .input-group .hint {
+        display: block;
+        margin-top: 0.3rem;
+        font-size: 0.8rem;
+        color: #8a9bb0;
+        padding-left: 0.5rem;
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 0.9rem;
+        background: #1f3a5f;
+        border: none;
+        border-radius: 60px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: background 0.25s, transform 0.1s, box-shadow 0.2s;
+        box-shadow: 0 6px 14px rgba(31, 58, 95, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+
+    .btn-register i {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .btn-register:hover {
+        background: #143049;
+        box-shadow: 0 8px 18px rgba(31, 58, 95, 0.35);
+        transform: scale(1.01);
+    }
+
+    .btn-register:active {
+        transform: scale(0.98);
+    }
+
+    .login-section {
+        text-align: center;
+        margin-top: 1.8rem;
+        font-size: 0.98rem;
+        color: #3d4f6a;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding-top: 1.5rem;
+    }
+
+    .login-link {
+        color: #1f4a7a;
+        font-weight: 600;
+        text-decoration: none;
+        margin-left: 0.4rem;
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        background: rgba(59, 110, 165, 0.08);
+        transition: background 0.2s, color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .login-link i {
+        font-size: 0.8rem;
+    }
+
+    .login-link:hover {
+        background: rgba(59, 110, 165, 0.18);
+        color: #0f2f4f;
+    }
+
+    .message {
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.2rem;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .message.error {
+        background: #fee9e7;
+        color: #b3403a;
+        border-left: 4px solid #b3403a;
+    }
+
+    .message.success {
+        background: #e6f4ea;
+        color: #1e7e34;
+        border-left: 4px solid #1e7e34;
+    }
+
+    .message i {
+        font-size: 1.2rem;
+    }
+
+    @media (max-width: 480px) {
+        .register-card {
+            padding: 2rem 1.5rem;
+        }
+        .register-header h1 {
+            font-size: 1.9rem;
+        }
+    }
+</style>
+
+<div class="register-wrapper">
+    <div class="register-card">
+        <div class="register-header">
+            <h1>
+                <i class="fas fa-user-plus"></i> 
+                {% if language == "zh" %}注册{% else %}Register{% endif %}
+            </h1>
+            <span class="sub">
+                <i class="far fa-smile"></i> 
+                {% if language == "zh" %}加入书搜搜，发现更多好书{% else %}Join BookSearch, discover great books{% endif %}
+            </span>
+        </div>
+
+        {% if register_error %}
+        <div class="message error">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ register_error }}
+        </div>
+        {% endif %}
+
+        {% if register_success %}
+        <div class="message success">
+            <i class="fas fa-check-circle"></i>
+            {{ register_success }}
+        </div>
+        {% else %}
+        <form method="post" action="/auth/register">
+            <div class="input-group">
+                <label for="reg_username"><i class="fas fa-user"></i> 
+                    {% if language == "zh" %}用户名{% else %}Username{% endif %}
+                </label>
+                <input type="text" id="reg_username" name="username" 
+                       placeholder="{% if language == "zh" %}请输入用户名{% else %}Enter username{% endif %}" required />
+                <span class="input-icon"><i class="fas fa-user-circle"></i></span>
+            </div>
+
+            <div class="input-group">
+                <label for="reg_email"><i class="fas fa-envelope"></i> 
+                    {% if language == "zh" %}邮箱{% else %}Email{% endif %}
+                </label>
+                <input type="email" id="reg_email" name="email" 
+                       placeholder="{% if language == "zh" %}请输入邮箱{% else %}Enter email{% endif %}" required />
+                <span class="input-icon"><i class="fas fa-envelope"></i></span>
+            </div>
+
+            <div class="input-group">
+                <label for="reg_password"><i class="fas fa-key"></i> 
+                    {% if language == "zh" %}密码{% else %}Password{% endif %}
+                </label>
+                <input type="password" id="reg_password" name="password" 
+                       placeholder="{% if language == "zh" %}请输入密码{% else %}Enter password{% endif %}" required minlength="6" />
+                <span class="input-icon"><i class="fas fa-lock"></i></span>
+                <span class="hint">
+                    <i class="fas fa-info-circle"></i> 
+                    {% if language == "zh" %}至少6位{% else %}At least 6 characters{% endif %}
+                </span>
+            </div>
+
+            <button type="submit" class="btn-register">
+                <i class="fas fa-user-plus"></i> 
+                {% if language == "zh" %}注 册{% else %}Register{% endif %}
+            </button>
+        </form>
+        {% endif %}
+
+        <div class="login-section">
+            <span>
+                {% if language == "zh" %}已有账号？{% else %}Already have an account?{% endif %}
+            </span>
+            <a href="/auth/login" class="login-link">
+                <i class="fas fa-sign-in-alt"></i> 
+                {% if language == "zh" %}立即登录{% else %}Login{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
