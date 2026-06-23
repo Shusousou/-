@@ -10,7 +10,7 @@ import os
 # ============================================
 # 在下方填入你的 DeepSeek API Key
 # 获取方式：https://platform.deepseek.com/
-DEEPSEEK_API_KEY = ""  # ← 请替换为你的真实Key
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")  # 从环境变量读取，安全不落盘
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 DEEPSEEK_MODEL = "deepseek-chat"
 

@@ -5,11 +5,11 @@
 设计理念：
   用户输入可以是任何自然语言——情绪、作者、书名、学科、场景。
   AI 实时返回 JSON 混合武器库：
-    - subjects: 英文学科关键词（宏观大网，捞取学科内所有书）
+    - subjects: 中文学科关键词（宏观大网，捞取学科内所有书）
     - specific_targets: 特定书名/作者/ISBN（微观精准直达）
 
   后端两条轨道任意命中即算成功：
-    - 轨道 ①（学科）：subjects → 匹配 Subjects(英文) + category_cn(中文)
+    - 轨道 ①（学科）：subjects → 匹配 category_cn(中文)
     - 轨道 ②（精准）：specific_targets → 匹配 Title/title_cn/Author/ISBN
 
   安全策略：
@@ -38,7 +38,7 @@ except (ImportError, AttributeError):
 
 
 # ============================================
-# 实时 AI 意图理解（情绪 → 英文学科关键词）
+# 实时 AI 意图理解（情绪 → 中文学科关键词）
 # ============================================
 
 def _get_api_key() -> str:
@@ -53,13 +53,14 @@ def _get_api_key() -> str:
 def _call_ai_intent_extraction(user_input: str) -> dict | None:
     """【实时】调用 DeepSeek，返回 JSON 混合武器库
 
-    Prompt 终极设计：
-      AI 扮演天才图书检索专家，输出包含两个轨道的 JSON：
-        - subjects: 英文学科关键词（宏观大网捞取）
+    Prompt 设计：
+      AI 扮演图书检索专家，输出包含两个轨道的 JSON：
+        - subjects: 中文学科关键词（宏观大网捞取）
         - specific_targets: 特定书名/作者/人物的中英文名（微观精准直达）
+        - excluded_subjects: 用户想排除的学科
 
     Returns:
-        {"subjects": ["Physics"], "specific_targets": ["Einstein", "爱因斯坦"]}
+        {"subjects": ["心理学"], "specific_targets": [], "excluded_subjects": []}
         或 None（Key 为空/解析失败/超时 → 触发降级）
     """
     api_key = _get_api_key()
@@ -68,43 +69,22 @@ def _call_ai_intent_extraction(user_input: str) -> dict | None:
         return None
 
     system_prompt = (
-        "你是一位精通中英双语、极具同理心的天才图书检索专家。\n"
-        "你的任务：理解用户的情绪/状态/场景/人物/书名描述，"
-        "将其映射为高校图书馆检索用的混合武器库。\n\n"
-        "请严格遵循以下思考过程：\n"
-        "第一步（理解本质）：分析用户当前的真实需求是什么\n"
-        "  - 情绪舒缓？学术研究？追特定作者？找某本具体的书？\n"
-        "第二步（桥接馆藏）：\n"
-        "  - 从高校图书馆核心学科分类中挑选 1-3 个英文学科关键词（subjects）\n"
-        "    （可选学科：Psychology, Literature, Philosophy, History, \n"
-        "     Social sciences, Art, Fiction, Science, Religion, Education, \n"
-        "     Political science, Economics, Computer science, Language, \n"
-        "     Law, Medicine, Biography, Cosmology, Anthropology 等）\n"
-        "  - 同时识别任何特定的书名、作者名、研究人物名（specific_targets）\n\n"
-        "约束：严格只输出一个 JSON 字符串，格式如下：\n"
-        '{"subjects": ["英文学科词1", "英文学科词2"], '
-        '"specific_targets": ["特定书名/作者/人物的中英文名"]}\n\n'
-        "注意：\n"
-        "- 绝对不要包含 markdown 的 ```json 代码块标记\n"
-        "- 绝对不要任何中文解释\n"
-        "- subjects 只填英文学科词\n"
-        "- specific_targets 可以是书名、作者名、人物名的中文或英文\n"
-        "- 如果没有特定目标，specific_targets 留空数组 []\n\n"
+        "你是图书检索助手。你需要将用户的需求拆成三部分输出。\n\n"
+        "请严格按以下JSON格式输出，不要带markdown标记：\n"
+        '{"subjects": ["中文学科词"], "specific_targets": ["书名/作者名"], "excluded_subjects": ["排除的学科词"]}\n\n'
+        "规则：\n"
+        "1. subjects：用户提到的学科/类型，用中文学科词。最多2个。\n"
+        "   可选学科词：人工智能、机器学习、深度学习、计算机、数据科学、编程、Python、算法、心理学、哲学、\n"
+        "   历史、文学、小说、文化、语言、经济、法学、政治、医学、物理、化学、生物、数学、天文、\n"
+        "   宗教、教育、艺术、军事、自然、绘本、传记、科幻、管理。\n"
+        "   如果用户只表达了情绪（如心情不好、焦虑、无聊），没有指定学科，subjects 输出 []。\n"
+        "2. specific_targets：用户明确提到的书名、作者名。中英文均可。没有则 []。\n"
+        "3. excluded_subjects：用户说\"不想看/不要/排除\"的学科类型。没有则 []。\n\n"
         "示例：\n"
-        '输入"我很疲劳想缓缓" -> '
-        '{"subjects": ["Literature", "Psychology"], "specific_targets": []}\n'
-        '输入"我想研究爱因斯坦" -> '
-        '{"subjects": ["Physics", "Biography"], '
-        '"specific_targets": ["Einstein", "爱因斯坦"]}\n'
-        '输入"我想看霍金写的书" -> '
-        '{"subjects": ["Physics", "Cosmology"], '
-        '"specific_targets": ["Hawking", "霍金"]}\n'
-        '输入"找《追风筝的人》作者写的全部书" -> '
-        '{"subjects": ["Literature", "Fiction"], '
-        '"specific_targets": ["Kite Runner", "Hosseini", "胡赛尼"]}\n'
-        '输入"想看本关于机器学习的书" -> '
-        '{"subjects": ["Computer science", "Science"], '
-        '"specific_targets": []}'
+        '用户：我想看机器学习的书\n输出：{"subjects": ["机器学习"], "specific_targets": [], "excluded_subjects": []}\n'
+        '用户：最近心情不好有点焦虑，想看本书缓缓\n输出：{"subjects": [], "specific_targets": [], "excluded_subjects": []}\n'
+        '用户：想看村上春树的小说\n输出：{"subjects": ["文学", "小说"], "specific_targets": ["村上春树", "Murakami"], "excluded_subjects": []}\n'
+        '用户：想看关于心理学的书，不要太枯燥的\n输出：{"subjects": ["心理学"], "specific_targets": [], "excluded_subjects": []}'
     )
 
     try:
@@ -138,14 +118,16 @@ def _call_ai_intent_extraction(user_input: str) -> dict | None:
         parsed = _json.loads(content)
         subjects = parsed.get("subjects", [])
         specific_targets = parsed.get("specific_targets", [])
+        excluded_subjects = parsed.get("excluded_subjects", [])
 
         if isinstance(subjects, list) and isinstance(specific_targets, list):
             # 过滤空字符串
             subjects = [s for s in subjects if s and s.strip()]
             specific_targets = [t for t in specific_targets if t and t.strip()]
+            excluded_subjects = [e for e in excluded_subjects if e and e.strip()]
             print(f"[AI 意图] 用户输入\"{user_input}\" → "
-                  f"subjects={subjects}, specific={specific_targets}")
-            return {"subjects": subjects, "specific_targets": specific_targets}
+                  f"subjects={subjects}, specific={specific_targets}, excluded={excluded_subjects}")
+            return {"subjects": subjects, "specific_targets": specific_targets, "excluded_subjects": excluded_subjects}
 
         print(f"[AI 意图] JSON 字段类型异常: {content!r}")
         return None
@@ -160,14 +142,15 @@ def _call_ai_intent_extraction(user_input: str) -> dict | None:
 # ============================================
 
 def _ai_multi_track_search(books: list[dict], ai_result: dict) -> list[dict]:
-    """多轨全字段轰炸匹配：AI 返回的 subjects + specific_targets
+    """多轨全字段轰炸匹配：AI 返回的 subjects + specific_targets + excluded_subjects
 
-    条件 ①（宏观学科）：subjects → 匹配 Subjects（英文）+ category_cn（中文）
+    条件 ①（宏观学科）：subjects → 匹配 category_cn（中文）
     条件 ②（微观精准）：specific_targets → 匹配 Title / title_cn / Author / ISBN
-    只要满足任意一个条件即命中。
+    条件 ③（排除）：excluded_subjects → 匹配到的排除
     """
     subjects = [s.lower() for s in ai_result.get("subjects", []) if s and s.strip()]
     targets = [t.lower() for t in ai_result.get("specific_targets", []) if t and t.strip()]
+    excluded = [e.lower() for e in ai_result.get("excluded_subjects", []) if e and e.strip()]
 
     if not subjects and not targets:
         return []
@@ -178,23 +161,14 @@ def _ai_multi_track_search(books: list[dict], ai_result: dict) -> list[dict]:
 
         # 条件 ①：宏观学科匹配
         if subjects:
-            # Subjects 英文（在 category 列表中）
-            cats_lower = [c.lower() for c in book.get("category", [])]
-            # category_cn 中文
             cat_cn_lower = book.get("category_cn", "").lower()
             for s in subjects:
                 if s in cat_cn_lower:
                     hit = True
                     break
-                if any(s in cat for cat in cats_lower):
-                    hit = True
-                    break
-            if hit:
-                matched.append(book)
-                continue
 
         # 条件 ②：微观精准匹配
-        if targets:
+        if not hit and targets:
             title_low = book.get("title", "").lower()
             title_cn_low = book.get("title_cn", "").lower()
             author_low = book.get("author", "").lower()
@@ -209,10 +183,19 @@ def _ai_multi_track_search(books: list[dict], ai_result: dict) -> list[dict]:
                 if t in isbn_clean:
                     hit = True
                     break
-            if hit:
-                matched.append(book)
 
-    print(f"[AI 多轨] subjects={subjects} + targets={targets} → {len(matched)} 本")
+        # 条件 ③：排除匹配
+        if hit and excluded:
+            cat_cn_lower = book.get("category_cn", "").lower()
+            for e in excluded:
+                if e in cat_cn_lower:
+                    hit = False
+                    break
+
+        if hit:
+            matched.append(book)
+
+    print(f"[AI 多轨] subjects={subjects} + targets={targets} + excluded={excluded} → {len(matched)} 本")
     return matched
 
 
@@ -401,15 +384,7 @@ def _get_all_books() -> list[dict]:
 # ============================================
 
 def _fallback_multi_field_search(books: list[dict], query: str) -> list[dict]:
-    """安全降级：原始 query 对 5 个中英文字段暴力轰炸
-
-    当 AI 调用完全失败时，直接拿用户输入在以下字段做模糊匹配：
-      - title（英文原名）、title_cn（中文书名）
-      - author（作者名）
-      - category（Subjects 英文）、category_cn（中文分类标签）
-      - ISBN（去连字符）
-    确保演示永不挂科。
-    """
+    """安全降级：原始 query 对 5 个中英文字段暴力轰炸"""
     seen = set()
     results = []
     q_low = query.lower()
@@ -469,18 +444,18 @@ def search_books(keyword: str) -> list[dict]:
     """搜索图书馆馆藏图书（终极双轨检索）
 
     流程：
-      1. AI 实时返回 {"subjects": [...], "specific_targets": [...]}
+      1. AI 实时返回 {"subjects": [...], "specific_targets": [...], "excluded_subjects": [...]}
       2. 双轨匹配：
-          轨道 ①（学科）：subjects → Subjects + category_cn
+          轨道 ①（学科）：subjects → category_cn
           轨道 ②（精准）：specific_targets → Title/title_cn/Author/ISBN
-      3. 任意轨道命中即返回
-      4. AI 失败 → 降级为原始关键词全字段暴力搜索
+          轨道 ③（排除）：excluded_subjects → 过滤
+      3. AI 失败 → 降级为原始关键词全字段暴力搜索
 
     Args:
         keyword: 自然语言描述（学科/情绪/作者/书名/ISBN 均可）
 
     Returns:
-        匹配的图书列表（每本 14 字段），空列表表示无匹配
+        匹配的图书列表（空列表表示无匹配），最多返回 20 本
     """
     all_books = _get_all_books()
 
@@ -497,26 +472,22 @@ def search_books(keyword: str) -> list[dict]:
     if ai_result:
         ai_results = _ai_multi_track_search(all_books, ai_result)
         if ai_results:
+            # 情绪类搜索（无 subjects）时，取前 5 本学科相关
+            if not ai_result.get("subjects"):
+                return ai_results[:5]
             return ai_results
-        print("[AI 多轨] AI 成功但未命中任何图书，进入降级搜索")
 
     # ============================
     # 降级通道：全字段暴力轰炸
     # ============================
     fallback_results = _fallback_multi_field_search(all_books, raw_query)
     print(f"[降级搜索] 原始关键词全字段轰炸 → {len(fallback_results)} 本")
-    return fallback_results
+    # 降级结果最多返回 20 本
+    return fallback_results[:20]
 
 
 def get_book_by_isbn(isbn: str) -> dict | None:
-    """根据 ISBN 精确查询单本书（签名不变）
-
-    Args:
-        isbn: ISBN 号（如 "978-7-302-45679-1"）
-
-    Returns:
-        匹配的图书字典（14 字段），或 None
-    """
+    """根据 ISBN 精确查询单本书"""
     if not isbn or not isbn.strip():
         return None
     clean_target = isbn.strip().replace("-", "").replace(" ", "")
