@@ -10,8 +10,7 @@ import os
 
 from jinja2 import Environment, FileSystemLoader, ChoiceLoader
 from ...database.models import User, engine
-from .library_api import search_books, get_book_by_isbn
-from .ai_helper import get_recommendations
+from .library_api import search_books
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -55,7 +54,7 @@ async def search(
     """处理搜索请求"""
     lang = request.cookies.get("language", "zh")
     current_user = get_current_user(request)
-    
+
     if not query.strip():
         msg = "请输入你想看的书" if lang == "zh" else "Please enter what you want to read"
         return templates.TemplateResponse(request, "search.html", {
@@ -65,82 +64,32 @@ async def search(
             "query": query,
             "error": msg
         })
-    
-    # Step 1: AI分析用户输入，生成推荐书单
-    ai_result = get_recommendations(query)
-    keywords = ai_result.get("keywords", [query])
-    recommended_books = ai_result.get("books", [])
-    
-    # Step 2: 用关键词查图书馆馆藏
+
+    # 一站式搜索：library_api.py 已内置 AI 意图理解 + 双层检索
+    # 只调一次 search_books()，绝不重复调 AI
+    lib_books = search_books(query)
+
+    # 组装前端展示结果
     results = []
-    for rec_book in recommended_books:
-        # 先尝试用ISBN精确查询
-        library_book = None
-        if rec_book.get("isbn"):
-            library_book = get_book_by_isbn(rec_book["isbn"])
-        
-        # ISBN没查到，用书名模糊搜索
-        if not library_book:
-            lib_results = search_books(rec_book["title"])
-            library_book = lib_results[0] if lib_results else None
-        
-        # 组装结果
-        result = {
-            "title": rec_book["title"],
-            "author": rec_book.get("author", ""),
-            "isbn": rec_book.get("isbn", ""),
-            "reason": rec_book.get("reason", ""),
-            "detail": rec_book.get("detail", ""),
-            "library_status": library_book["status"] if library_book else "not_found",
-            "library_location": library_book.get("location", "") if library_book else "",
-            "library_due_date": library_book.get("due_date") if library_book else None,
+    for lib_book in lib_books:
+        r = {
+            "title": lib_book["title"],
+            "title_cn": lib_book.get("title_cn", ""),
+            "author": lib_book["author"],
+            "isbn": lib_book["isbn"],
+            "reason": "",
+            "detail": "",
+            "library_status": lib_book["status"],
+            "library_location": lib_book.get("location", ""),
+            "library_due_date": lib_book.get("due_date"),
+            "forum_posts": [],
+            "exchange_books": [],
         }
-        
-        # Step 3: 从论坛查相关评论
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import Session as DBSession
-        from ...database.models import Post
-        db_path = os.path.join(BASE_DIR, "database", "database.db")
-        db_engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
-        
-        forum_posts = []
-        with DBSession(db_engine) as session:
-            posts = session.query(Post).filter(
-                (Post.book_name == rec_book["title"]) |
-                (Post.isbn == rec_book.get("isbn", ""))
-            ).all()
-            for p in posts:
-                forum_posts.append({
-                    "username": p.user.username if p.user else "匿名",
-                    "content": p.content[:100] + ("..." if len(p.content) > 100 else ""),
-                    "likes": p.likes_count,
-                    "post_id": p.id
-                })
-        
-        result["forum_posts"] = forum_posts
-        
-        # Step 4: 从交换市场查可借图书
-        from ...database.models import ExchangeBook
-        exchange_books = []
-        with DBSession(db_engine) as session:
-            ebooks = session.query(ExchangeBook).filter(
-                (ExchangeBook.book_name == rec_book["title"]) |
-                (ExchangeBook.isbn == rec_book.get("isbn", ""))
-            ).filter(ExchangeBook.status == "available").all()
-            for eb in ebooks:
-                exchange_books.append({
-                    "owner": eb.owner.username if eb.owner else "匿名",
-                    "book_id": eb.id,
-                    "requirements": eb.requirements
-                })
-        
-        result["exchange_books"] = exchange_books
-        results.append(result)
-    
+        results.append(r)
+
     return templates.TemplateResponse(request, "search.html", {
         "language": lang,
         "current_user": current_user,
         "results": results,
-        "query": query,
-        "keywords": keywords
+        "query": query
     })
