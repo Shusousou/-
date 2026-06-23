@@ -7,7 +7,7 @@
         {% if language == "zh" %}🔍 告诉我你想看什么书{% else %}🔍 Tell me what you want to read{% endif %}
     </h2>
     
-    <form method="post" action="/search/" class="search-box" id="searchForm">
+            <form method="post" action="/search/" class="search-box" id="searchForm">
         <input type="text" name="query" class="search-input" 
                placeholder="{% if language == "zh" %}例如：我想看机器学习的入门书{% else %}e.g. I want to learn machine learning{% endif %}"
                value="{{ query }}" required>
@@ -71,9 +71,14 @@
 
 {% if results %}
 <div class="results">
-    {% for book in results %}
+        {% for book in results %}
     <div class="result-card">
         <h3>📘 {{ book.title }}</h3>
+        {% if book.title_cn and book.title_cn != book.title %}
+        <div style="color:#A0522D;font-size:0.9em;margin-bottom:4px;">
+            📖 中文书名：{{ book.title_cn }}
+        </div>
+        {% endif %}
         <div class="book-meta">
             <span>✍️ {{ book.author }}</span>
             {% if book.isbn %}<span>📖 ISBN: {{ book.isbn }}</span>{% endif %}
