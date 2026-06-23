@@ -42,6 +42,32 @@
             </div>
         </div>
         
+        <div class="form-group">
+            <label for="contact">
+                {% if language == "zh" %}📞 联系方式 *{% else %}📞 Contact *{% endif %}
+            </label>
+            <div style="display:flex;gap:8px;">
+                <select id="contact_type" name="contact_type" style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9em;width:110px;flex-shrink:0;">
+                    <option value="">{% if language == "zh" %}选择类型{% else %}Select type{% endif %}</option>
+                    <option value="微信" {% if user_contact_type == "微信" %}selected{% endif %}>WeChat</option>
+                    <option value="手机号" {% if user_contact_type == "手机号" %}selected{% endif %}>{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
+                    <option value="QQ" {% if user_contact_type == "QQ" %}selected{% endif %}>QQ</option>
+                    <option value="邮箱" {% if user_contact_type == "邮箱" %}selected{% endif %}>{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
+                    <option value="其他" {% if user_contact_type == "其他" %}selected{% endif %}>{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
+                </select>
+                <input type="text" id="contact" name="contact" required style="flex:1;"
+                       value="{{ user_contact }}"
+                       placeholder="{% if language == "zh" %}例如：微信号、手机号、QQ等{% else %}e.g. WeChat ID, Phone No.{% endif %}">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="email_notify" name="email_notify" checked value="true">
+                <span>{% if language == "zh" %}📧 开启邮件通知（匹配到需求时发邮件提醒）{% else %}📧 Email notification when matched{% endif %}</span>
+            </label>
+        </div>
+        
         <div style="display:flex;gap:10px;margin-top:10px;">
             <button type="button" class="btn btn-primary" style="background:#5D8AA8;" onclick="aiGenerate()">
                 {% if language == "zh" %}🤖 AI 帮我写{% else %}🤖 AI Generate{% endif %}

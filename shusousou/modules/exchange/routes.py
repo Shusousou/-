@@ -256,7 +256,9 @@ async def new_exchange_page(request: Request):
     
     return templates.TemplateResponse(request, "new_exchange.html", {
         "language": lang,
-        "current_user": current_user
+        "current_user": current_user,
+        "user_contact": current_user.contact or "",
+        "user_contact_type": current_user.contact_type or ""
     })
 
 
@@ -266,7 +268,10 @@ async def new_exchange(
     book_name: str = Form(...),
     author: str = Form(""),
     requirements: str = Form(""),
-    expectations: str = Form("")
+    expectations: str = Form(""),
+    contact: str = Form(...),
+    contact_type: str = Form(""),
+    email_notify: str = Form("false")
 ):
     """提交发布图书"""
     login_check = require_login(request)
@@ -281,6 +286,9 @@ async def new_exchange(
             author=author,
             requirements=requirements,
             expectations=expectations,
+            contact=contact,
+            contact_type=contact_type,
+            email_notify=(email_notify == "true"),
             status="available"
         )
         session.add(book)
@@ -525,23 +533,53 @@ async def exchange_detail(request: Request, book_id: int):
                 "created_at": m.created_at.strftime("%Y-%m-%d %H:%M") if m.created_at else ""
             })
         
+        # 获取发布者的联系方式（优先用图书自带的，没有则用个人资料里的）
+        book_contact = book.contact or ""
+        if not book_contact and book.owner:
+            book_contact = book.owner.contact or ""
+        
         book_data = {
             "id": book.id,
             "book_name": book.book_name,
             "author": book.author or "",
             "requirements": book.requirements or "",
             "expectations": book.expectations or "",
+            "contact": book_contact,
+            "contact_type": book.contact_type or (book.owner.contact_type if book.owner else ""),
+            "email_notify": book.email_notify if hasattr(book, 'email_notify') else True,
             "owner": book.owner.username if book.owner else "匿名",
             "owner_id": book.owner_id,
             "status": book.status,
             "created_at": book.created_at.strftime("%Y-%m-%d") if book.created_at else ""
         }
+        
+        # 查询匹配到这本书的需求
+        book_matches = session.query(RequestMatch).filter(
+            RequestMatch.book_id == book_id
+        ).order_by(RequestMatch.created_at.desc()).all()
+        
+        matched_requests = []
+        for m in book_matches:
+            req = session.query(ExchangeRequest).filter(ExchangeRequest.id == m.request_id).first()
+            if req:
+                req_user = session.query(User).filter(User.id == req.user_id).first()
+                matched_requests.append({
+                    "req_id": req.id,
+                    "description": req.description,
+                    "username": req_user.username if req_user else "匿名",
+                    "user_id": req.user_id,
+                    "contact": req_user.contact if req_user else "",
+                    "contact_type": req_user.contact_type if req_user else "",
+                    "reason": m.match_reason or "",
+                    "created_at": m.created_at.strftime("%m-%d %H:%M") if m.created_at else ""
+                })
     
     return templates.TemplateResponse(request, "exchange_detail.html", {
         "language": lang,
         "current_user": current_user,
         "book": book_data,
-        "messages": msg_list
+        "messages": msg_list,
+        "matched_requests": matched_requests
     })
 
 
@@ -617,6 +655,27 @@ async def close_exchange(request: Request, book_id: int):
             session.commit()
     
     return RedirectResponse(url="/exchange/", status_code=303)
+
+
+@router.post("/{book_id}/toggle-notify")
+async def toggle_notify(request: Request, book_id: int, email_notify: str = Form("false")):
+    """切换邮件通知开关"""
+    login_check = require_login(request)
+    if isinstance(login_check, RedirectResponse):
+        return login_check
+    current_user = login_check
+    
+    with get_db() as session:
+        book = session.query(ExchangeBook).filter(
+            ExchangeBook.id == book_id,
+            ExchangeBook.owner_id == current_user.id
+        ).first()
+        
+        if book:
+            book.email_notify = (email_notify == "true")
+            session.commit()
+    
+    return RedirectResponse(url=f"/exchange/{book_id}", status_code=303)
 
 
 

@@ -1,5 +1,12 @@
 ﻿{% extends "base.html" %}
-{% block title %}{% if language == "zh" %}我的 - 书搜搜{% else %}Profile - BookSearch{% endif %}{% endblock %}
+{% block title %}{% if language == "zh" %}我的 - 书搜搜{% else %}Profile - BookSearch{% endif %}<script>
+function toggleContactEdit() {
+    var edit = document.getElementById('contact-edit');
+    var display = document.getElementById('contact-display');
+    edit.style.display = edit.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
 {% block content %}
 <div style="max-width:700px;margin:0 auto;">
     <div style="background:white;border-radius:12px;padding:30px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:20px;">
@@ -7,21 +14,51 @@
             <div style="width:70px;height:70px;border-radius:50%;background:#8B4513;color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;">
                 {{ current_user.username[0] }}
             </div>
-            <div>
+            <div style="flex:1;">
                 <h2 style="margin:0 0 5px;color:#333;">{{ current_user.username }}</h2>
                 <p style="margin:0;color:#999;font-size:0.9em;">📧 {{ current_user.email }}</p>
                 <p style="margin:5px 0 0;color:#bbb;font-size:0.8em;">{% if language == "zh" %}注册于{% else %}Registered{% endif %} {{ current_user.created_at }}</p>
+                
+                <!-- 联系方式 -->
+                <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;">
+                    <p style="margin:0 0 8px;color:#666;font-size:0.9em;">
+                        📞 {% if language == "zh" %}联系方式{% else %}Contact{% endif %}：
+                        <span id="contact-display" style="color:#333;font-weight:bold;">
+                            {{ current_user.contact or (language == "zh" and "未设置" or "Not set") }}
+                        </span>
+                        <button onclick="toggleContactEdit()" class="btn btn-secondary" style="font-size:0.8em;padding:3px 10px;margin-left:10px;">
+                            {% if language == "zh" %}修改{% else %}Edit{% endif %}
+                        </button>
+                    </p>
+                    <div id="contact-edit" style="display:none;">
+                        <form method="post" action="/profile/update-contact" style="display:flex;flex-direction:column;gap:8px;">
+                            <div style="display:flex;gap:8px;">
+                                <select name="contact_type" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+                                    <option value="微信" {% if current_user.contact_type == "微信" %}selected{% endif %}>WeChat</option>
+                                    <option value="手机号" {% if current_user.contact_type == "手机号" %}selected{% endif %}>{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
+                                    <option value="QQ" {% if current_user.contact_type == "QQ" %}selected{% endif %}>QQ</option>
+                                    <option value="邮箱" {% if current_user.contact_type == "邮箱" %}selected{% endif %}>{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
+                                    <option value="其他" {% if current_user.contact_type == "其他" %}selected{% endif %}>{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
+                                </select>
+                                <input type="text" name="contact" value="{{ current_user.contact or '' }}" 
+                                       placeholder="{% if language == "zh" %}联系方式内容{% else %}Your contact{% endif %}"
+                                       style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;">
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button type="submit" class="btn btn-primary" style="padding:8px 15px;">
+                                    {% if language == "zh" %}保存{% else %}Save{% endif %}
+                                </button>
+                                <button type="button" onclick="toggleContactEdit()" class="btn btn-secondary" style="padding:8px 15px;">
+                                    {% if language == "zh" %}取消{% else %}Cancel{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
-        <a href="/exchange/" style="text-decoration:none;">
-            <div style="background:white;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                <div style="font-size:36px;margin-bottom:10px;">📚</div>
-                <div style="font-weight:bold;color:#333;">{% if language == "zh" %}我发布的图书{% else %}My Books{% endif %}</div>
-                <div style="color:#999;font-size:0.85em;margin-top:5px;">{{ my_books|length }} {% if language == "zh" %}本{% else %}books{% endif %}</div>
-            </div>
-        </a>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
         <a href="/exchange/my-requests" style="text-decoration:none;">
             <div style="background:white;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);position:relative;">
                 <div style="font-size:36px;margin-bottom:10px;">🎯</div>
@@ -42,5 +79,45 @@
             </div>
         </a>
     </div>
+    
+    <!-- 我发布的图书 -->
+    <div style="margin-top:25px;">
+        <h3 style="color:#8B4513;margin-bottom:15px;">📚 {% if language == "zh" %}我发布的图书{% else %}My Books{% endif %} ({{ my_books|length }})</h3>
+        {% if my_books %}
+            {% for book in my_books %}
+            <a href="/exchange/{{ book.id }}" style="text-decoration:none;">
+                <div style="background:white;border-radius:12px;padding:15px 20px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-weight:bold;color:#333;">{{ book.book_name }}</div>
+                        <div style="font-size:0.85em;color:#999;margin-top:3px;">
+                            {% if book.author %}✍️ {{ book.author }} · {% endif %}
+                            {% if book.status == "available" %}
+                                <span style="color:#2e7d32;">✅ {% if language == "zh" %}可借{% else %}Available{% endif %}</span>
+                            {% else %}
+                                <span style="color:#999;">🔒 {% if language == "zh" %}已下架{% else %}Closed{% endif %}</span>
+                            {% endif %}
+                            · {{ book.created_at }}
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.3em;font-weight:bold;color:#8B4513;">{{ book.match_count }}</div>
+                        <div style="font-size:0.8em;color:#999;">{% if language == "zh" %}匹配需求{% else %}matches{% endif %}</div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <p style="color:#999;text-align:center;padding:30px;">
+                {% if language == "zh" %}还没有发布过图书{% else %}No books posted yet{% endif %}
+            </p>
+        {% endif %}
+    </div>
 </div>
+<script>
+function toggleContactEdit() {
+    var edit = document.getElementById('contact-edit');
+    var display = document.getElementById('contact-display');
+    edit.style.display = edit.style.display === 'none' ? 'block' : 'none';
+}
+</script>
 {% endblock %}

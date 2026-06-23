@@ -1,10 +1,11 @@
-﻿from fastapi import APIRouter, Request
+﻿from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import os
 from jinja2 import Environment, FileSystemLoader, ChoiceLoader
 
 from ...utils import get_db, get_current_user
+from ...database.models import User
 
 router = APIRouter(prefix='/profile', tags=['profile'])
 
@@ -36,12 +37,26 @@ async def profile_page(request: Request):
     
     lang = request.cookies.get('language', 'zh')
     
-    from ...database.models import ExchangeBook, Post, Comment
+    from ...database.models import ExchangeBook, Post, Comment, RequestMatch
     
     with get_db() as session:
         my_books = session.query(ExchangeBook).filter(
             ExchangeBook.owner_id == current_user.id
         ).order_by(ExchangeBook.created_at.desc()).all()
+        
+        my_books_data = []
+        for b in my_books:
+            match_count = session.query(RequestMatch).filter(
+                RequestMatch.book_id == b.id
+            ).count()
+            my_books_data.append({
+                'id': b.id,
+                'book_name': b.book_name,
+                'author': b.author or '',
+                'status': b.status,
+                'created_at': b.created_at.strftime('%Y-%m-%d') if b.created_at else '',
+                'match_count': match_count
+            })
         
         my_posts = session.query(Post).filter(
             Post.user_id == current_user.id
@@ -59,8 +74,25 @@ async def profile_page(request: Request):
     return templates.TemplateResponse(request, 'profile.html', {
         'language': lang,
         'current_user': current_user,
-        'my_books': my_books,
+        'my_books': my_books_data,
         'my_posts': my_posts,
         'unread_comments': unread_comments
     })
+
+
+@router.post('/update-contact')
+async def update_contact(request: Request, contact: str = Form(...), contact_type: str = Form('')):
+    login_check = require_login(request)
+    if isinstance(login_check, RedirectResponse):
+        return login_check
+    current_user = login_check
+    
+    with get_db() as session:
+        user = session.query(User).filter(User.id == current_user.id).first()
+        if user:
+            user.contact = contact
+            user.contact_type = contact_type
+            session.commit()
+    
+    return RedirectResponse(url='/profile', status_code=303)
 

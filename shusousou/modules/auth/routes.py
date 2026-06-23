@@ -121,7 +121,8 @@ async def register(
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
-    verify_code: str = Form(...)
+    verify_code: str = Form(...),
+    contact: str = Form("")
 ):
     """处理注册"""
     lang = request.cookies.get("language", "zh")
@@ -183,6 +184,8 @@ async def register(
         # 更新临时用户为真实用户
         temp_user.username = username
         temp_user.password_hash = hash_password(password)
+        temp_user.contact = contact
+        temp_user.contact_type = contact_type
         temp_user.is_verified = True
         temp_user.verify_code = None
         temp_user.verify_code_expire = None

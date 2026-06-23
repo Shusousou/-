@@ -19,7 +19,11 @@ class ExchangeBook(Base):
     isbn = Column(String(20), index=True)
     requirements = Column(Text)
     expectations = Column(Text)
+    contact = Column(String(200), default="")
+    contact_type = Column(String(20), default="")
     status = Column(String(20), default="available")
+    email_notify = Column(Boolean, default=
+True)
     created_at = Column(DateTime, default=datetime.now)
 
     owner = relationship("User", back_populates="exchange_books")

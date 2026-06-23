@@ -56,6 +56,29 @@
                        placeholder="{% if language == "zh" %}至少6位{% else %}At least 6 chars{% endif %}">
             </div>
             
+            <div class="form-group">
+                <label for="reg_contact">{% if language == "zh" %}📞 联系方式 *{% else %}📞 Contact *{% endif %}</label>
+                <div style="display:flex;gap:8px;">
+                    <select id="reg_contact_type" name="contact_type" style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9em;">
+                        <option value="">{% if language == "zh" %}选择类型{% else %}Select type{% endif %}</option>
+                        <option value="微信">WeChat</option>
+                        <option value="手机号">{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
+                        <option value="QQ">QQ</option>
+                        <option value="邮箱">{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
+                        <option value="其他">{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
+                    </select>
+                    <input type="text" id="reg_contact" name="contact" style="flex:1;"
+                           placeholder="{% if language == "zh" %}你的联系方式，匹配后需求者能看到{% else %}Your contact info for book exchange{% endif %}">
+                </div>
+                <small style="color:#999;font-size:0.85em;margin-top:3px;display:block;">
+                    {% if language == "zh" %}
+                    💡 你发布的图书匹配到需求时，需求者可通过"联系TA"看到你的联系方式。你也可以在个人中心修改。
+                    {% else %}
+                    💡 When a reader matches your book, they can see your contact. You can update it later in Profile.
+                    {% endif %}
+                </small>
+            </div>
+            
             <button type="submit" class="form-submit">
                 {% if language == "zh" %}注册{% else %}Register{% endif %}
             </button>
