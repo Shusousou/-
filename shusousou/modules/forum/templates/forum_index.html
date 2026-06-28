@@ -65,7 +65,9 @@
                 {% endif %}
             {% endif %}
             <span>💬 {{ post.comment_count }}</span>
-            <span>👍 {{ post.like_count }}</span>
+            <span>👍 {{ post.likes_count }}</span>
+            <span>⭐ {{ post.stars_count }}</span>
+            {% if post.review_type == "celebrity" %}<span style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:2px 8px;border-radius:10px;font-size:0.8em;">🌟 名人</span>{% endif %}
         </div>
     </div>
     {% endfor %}
