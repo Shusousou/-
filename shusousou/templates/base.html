@@ -23,8 +23,11 @@
                 <a href="/forum">
                     {% if language == "zh" %}论坛{% else %}Forum{% endif %}
                 </a>
-                <a href="/exchange">
+                                <a href="/exchange">
                     {% if language == "zh" %}交换{% else %}Exchange{% endif %}
+                </a>
+                <a href="/simulation">
+                    {% if language == "zh" %}模拟沙盘{% else %}Simulation{% endif %}
                 </a>
                 {% if current_user %}
                     <a href="/profile">
