@@ -42,10 +42,15 @@ def get_db():
 
 
 def require_login(request: Request):
-    """检查登录，未登录返回 None（API 模式）或跳转（页面模式）"""
+    """检查登录，API 模式返回用户或 None，页面模式请使用 require_login_page。"""
+    return get_current_user(request)
+
+
+def require_login_page(request: Request):
+    """页面模式登录检查，未登录重定向到登录页。"""
     user = get_current_user(request)
     if not user:
-        return None
+        return RedirectResponse(url="/auth/login", status_code=303)
     return user
 
 
@@ -417,7 +422,8 @@ async def forum_index(request: Request):
             query = query.filter(
                 (Post.book_name.contains(search_q)) |
                 (Post.content.contains(search_q)) |
-                (Post.author.contains(search_q))
+                (Post.author.contains(search_q)) |
+                (Post.isbn.contains(search_q))
             )
         posts = query.all()
 
@@ -466,10 +472,9 @@ async def forum_index(request: Request):
 # ============================================
 @router.get("/new", response_class=HTMLResponse)
 async def new_post_page(request: Request):
-    login_check = require_login(request)
-    if isinstance(login_check, RedirectResponse):
-        return login_check
-    current_user = login_check
+    current_user = require_login_page(request)
+    if isinstance(current_user, RedirectResponse):
+        return current_user
     lang = request.cookies.get("language", "zh")
     cats = CATEGORIES_EN if lang == "en" else CATEGORIES
     return templates.TemplateResponse(request, "new_post.html", {
@@ -480,13 +485,14 @@ async def new_post_page(request: Request):
 @router.post("/new")
 async def new_post(request: Request, book_name: str = Form(...), author: str = Form(""),
                    isbn: str = Form(""), category: str = Form(""), content: str = Form(...)):
-    login_check = require_login(request)
-    if isinstance(login_check, RedirectResponse):
-        return login_check
-    current_user = login_check
+    current_user = require_login_page(request)
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+
+    isbn_value = isbn.strip().replace("-", "").replace(" ", "") if isbn else ""
     with get_db() as session:
         post = Post(user_id=current_user.id, book_name=book_name, author=author,
-                    isbn=isbn.strip().replace("-","").replace(" ","") if isbn else "",
+                    isbn=isbn_value,
                     category=category, content=content, review_type="user")
         session.add(post)
         session.commit()
@@ -541,12 +547,10 @@ async def post_detail(request: Request, post_id: int):
             liked = session.query(Like).filter(Like.post_id == post_id, Like.user_id == current_user.id).first() is not None
             starred = session.query(Star).filter(Star.post_id == post_id, Star.user_id == current_user.id).first() is not None
 
-        highlights = BOOK_HIGHLIGHTS.get(post.isbn or "", DEFAULT_HIGHLIGHTS)
-
     return templates.TemplateResponse(request, "post_detail.html", {
         "language": lang, "current_user": current_user, "post": post_data,
         "library": lib_info, "comments": comment_list,
-        "liked": liked, "starred": starred, "highlights": highlights
+        "liked": liked, "starred": starred
     })
 
 
