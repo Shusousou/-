@@ -19,6 +19,8 @@ class ExchangeBook(Base):
     isbn = Column(String(20), index=True)
     requirements = Column(Text)
     expectations = Column(Text)
+    contact_type = Column(String(20), nullable=True)
+    contact = Column(String(100), nullable=True)
     status = Column(String(20), default="available")
     created_at = Column(DateTime, default=datetime.now)
 

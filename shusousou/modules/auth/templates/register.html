@@ -284,6 +284,7 @@
                 <input type="email" id="reg_email" name="email" 
                        placeholder="{% if language == "zh" %}请输入邮箱{% else %}Enter email{% endif %}" required />
                 <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                <small style="color:#999;font-size:0.85em;display:block;margin-top:4px;">{% if language == "zh" %}📧 邮箱用于接收书籍匹配通知，请务必填写有效邮箱{% else %}📧 Email is used for book match notifications, please use a valid email{% endif %}</small>
             </div>
 
             <div class="input-group">
@@ -297,6 +298,25 @@
                     <i class="fas fa-info-circle"></i> 
                     {% if language == "zh" %}至少6位{% else %}At least 6 characters{% endif %}
                 </span>
+            </div>
+
+            <div class="form-group">
+                <label for="reg_contact"><i class="fas fa-phone"></i> 
+                    {% if language == "zh" %}联系方式 *{% else %}Contact *{% endif %}
+                </label>
+                <div style="display:flex;gap:8px;">
+                    <select id="reg_contact_type" name="contact_type" style="flex:0 0 120px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9em;">
+                        <option value="">{% if language == "zh" %}选择类型{% else %}Type{% endif %}</option>
+                        <option value="微信">WeChat</option>
+                        <option value="手机号">{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
+                        <option value="QQ">QQ</option>
+                        <option value="邮箱">{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
+                        <option value="其他">{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
+                    </select>
+                    <input type="text" id="reg_contact" name="contact" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;"
+                           placeholder="{% if language == "zh" %}用于交换模块的联系方式（登录后可在个人中心更改）{% else %}Contact for book exchange{% endif %}" required>
+                </div>
+                <small style="color:#999;font-size:0.85em;">{% if language == "zh" %}💡 匹配到需求时，需求者能看到你的联系方式{% else %}💡 Visible to matched requesters{% endif %}</small>
             </div>
 
             <button type="submit" class="btn-register">
@@ -318,3 +338,5 @@
     </div>
 </div>
 {% endblock %}
+
+

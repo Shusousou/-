@@ -30,7 +30,7 @@
                     {% if language == "zh" %}模拟沙盘{% else %}Simulation{% endif %}
                 </a>
                 {% if current_user %}
-                    <a href="/profile">
+                    <a href="/exchange/personal">
                         {% if language == "zh" %}我的{% else %}Profile{% endif %}
                         ({{ current_user.username }})
                     </a>

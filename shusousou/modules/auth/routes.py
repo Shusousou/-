@@ -4,10 +4,11 @@
 """
 
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import hashlib
 import os
+import random
 
 from ...database.models import User
 from jinja2 import Environment, FileSystemLoader, ChoiceLoader
@@ -31,7 +32,7 @@ def hash_password(password: str) -> str:
 
 
 from ...utils import get_db, get_current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # ============================================
@@ -55,8 +56,9 @@ async def login_page(request: Request):
 async def login(
     request: Request,
     email: str = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
 ):
+
     """处理登录"""
     lang = request.cookies.get("language", "zh")
     current_user = get_current_user(request)
@@ -115,13 +117,14 @@ async def register_page(request: Request):
         "register_success": None
     })
 
-
 @router.post("/register", response_class=HTMLResponse)
 async def register(
     request: Request,
     username: str = Form(...),
     email: str = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
+    contact_type: str = Form(...),
+    contact: str = Form(...)
 ):
     """处理注册"""
     lang = request.cookies.get("language", "zh")
@@ -135,6 +138,7 @@ async def register(
             "register_error": msg, 
             "register_success": None
         })
+    
     
     with get_db() as session:
         existing = session.query(User).filter(
@@ -153,6 +157,8 @@ async def register(
         
         user = User(username=username, email=email,
                     password_hash=hash_password(password),
+                    contact_type=contact_type,
+                    contact=contact,
                     is_verified=True, verify_token=None)
         session.add(user)
         session.commit()

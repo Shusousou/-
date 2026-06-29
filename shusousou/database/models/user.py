@@ -18,6 +18,8 @@ class User(Base):
     password_hash = Column(String(200), nullable=False)
     is_verified = Column(Boolean, default=False)
     verify_token = Column(String(200), nullable=True)
+    contact_type = Column(String(20), nullable=True)
+    contact = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.now)
 
     # 关联

@@ -43,9 +43,9 @@ DATABASE_URL = "sqlite:///./shusousou/database/database.db"
 # 以QQ邮箱为例（需要开启SMTP服务）
 MAIL_SERVER = "smtp.qq.com"
 MAIL_PORT = 587
-MAIL_USERNAME = "2024604689@qq.com"  # ← 请替换为你的邮箱
-MAIL_PASSWORD = "eqlovlpdiqfubbeh"  # ← 请替换为你的SMTP授权码
-MAIL_FROM = "2024604689@qq.com"      # ← 请替换为发件人邮箱
+MAIL_USERNAME = ""  # ← 请替换为你的邮箱
+MAIL_PASSWORD = ""  # ← 请替换为你的SMTP授权码
+MAIL_FROM = ""      # ← 请替换为发件人邮箱
 
 # ============================================
 # 服务器配置

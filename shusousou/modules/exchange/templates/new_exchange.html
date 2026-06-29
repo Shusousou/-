@@ -34,14 +34,32 @@
         
         <div class="form-group">
             <label for="expectations">
-                {% if language == "zh" %}💡 期望说明{% else %}💡 Expectations{% endif %}
+                {% if language == "zh" %}💡 书籍内容简介{% else %}💡 Description{% endif %}
             </label>
             <div style="display:flex;gap:5px;margin-bottom:5px;">
                 <textarea id="expectations" name="expectations" rows="3" style="flex:1;"
-                          placeholder="{% if language == "zh" %}例如：希望借书的人爱惜书本、按时归还...{% else %}e.g. Please take good care of the book...{% endif %}"></textarea>
+                          placeholder="{% if language == "zh" %}简要描述本书内容，帮助他人了解{% else %}Brief description of the book{% endif %}"></textarea>
             </div>
         </div>
         
+        <div class="form-group">
+            <label><i class="fas fa-phone"></i> 
+                {% if language == "zh" %}联系方式 *{% else %}Contact *{% endif %}
+            </label>
+            <div style="display:flex;gap:8px;">
+                <select id="pub_contact_type" name="contact_type" style="flex:0 0 120px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9em;">
+                    <option value="">{% if language == "zh" %}选择类型{% else %}Type{% endif %}</option>
+                    <option value="微信">WeChat</option>
+                    <option value="手机号">{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
+                    <option value="QQ">QQ</option>
+                    <option value="邮箱">{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
+                    <option value="其他">{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
+                </select>
+                <input type="text" id="pub_contact" name="contact" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;"
+                       placeholder="{% if language == "zh" %}联系方式（用于需求者联系你）{% else %}Contact info for requesters{% endif %}" required>
+            </div>
+        </div>
+
         <div style="display:flex;gap:10px;margin-top:10px;">
             <button type="button" class="btn btn-primary" style="background:#5D8AA8;" onclick="aiGenerate()">
                 {% if language == "zh" %}🤖 AI 帮我写{% else %}🤖 AI Generate{% endif %}
@@ -89,6 +107,16 @@ function aiGenerate() {
         document.getElementById("ai-loading").style.display = "none";
     });
 }
+
+    // 自动填入用户联系方式
+    var userContactType = '{{ current_user.contact_type if current_user else "" }}';
+    var userContact = '{{ current_user.contact if current_user else "" }}';
+    if (userContactType) {
+        document.getElementById('pub_contact_type').value = userContactType;
+    }
+    if (userContact) {
+        document.getElementById('pub_contact').value = userContact;
+    }
 </script>
 
 {% endblock %}

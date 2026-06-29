@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}{% if language == "zh" %}个人中心 - 书搜搜{% else %}Personal Center - BookSearch{% endif %}{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<div class="personal-container" style="max-width:900px;margin:0 auto;padding:20px;">
+    <!-- 用户信息头部 -->
+    <div class="profile-header" style="background:linear-gradient(135deg,#8B4513,#A0522D);color:#fff;border-radius:12px;padding:30px;margin-bottom:25px;">
+        <div style="display:flex;align-items:center;gap:20px;">
+            <div style="width:70px;height:70px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;color:#8B4513;font-weight:bold;">
+                {{ current_user.username[0]|upper }}
+            </div>
+            <div style="flex:1;">
+                <h2 style="margin:0 0 5px 0;">{{ current_user.username }}</h2>
+                <p style="margin:0;opacity:0.8;"><i class="fas fa-envelope"></i> {{ current_user.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 联系方式（可编辑） -->
+    <div class="card" style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="margin-top:0;">
+            <i class="fas fa-phone"></i> 
+            {% if language == "zh" %}联系方式{% else %}Contact Info{% endif %}
+            <button onclick="toggleEditContact()" style="float:right;background:#8B4513;color:#fff;border:none;padding:6px 15px;border-radius:6px;cursor:pointer;font-size:0.85em;">
+                <i class="fas fa-edit"></i> {% if language == "zh" %}编辑{% else %}Edit{% endif %}
+            </button>
+        </h3>
+        <div id="contactDisplay">
+            {% if current_user.contact_type and current_user.contact %}
+                <p><strong>{{ current_user.contact_type }}:</strong> {{ current_user.contact }}</p>
+            {% else %}
+                <p style="color:#999;">{% if language == "zh" %}暂未填写{% else %}Not set{% endif %}</p>
+            {% endif %}
+        </div>
+        <div id="contactEdit" style="display:none;">
+            <form method="post" action="/exchange/update-contact" style="display:flex;gap:8px;align-items:center;">
+                <select name="contact_type" style="padding:8px;border:1px solid #ddd;border-radius:6px;">
+                    <option value="\u5fae\u4fe1" {% if current_user.contact_type == "\u5fae\u4fe1" %}selected{% endif %}>WeChat</option>
+                    <option value="\u624b\u673a\u53f7" {% if current_user.contact_type == "\u624b\u673a\u53f7" %}selected{% endif %}>{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
+                    <option value="QQ" {% if current_user.contact_type == "QQ" %}selected{% endif %}>QQ</option>
+                    <option value="\u90ae\u7bb1" {% if current_user.contact_type == "\u90ae\u7bb1" %}selected{% endif %}>{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
+                    <option value="\u5176\u4ed6" {% if current_user.contact_type == "\u5176\u4ed6" %}selected{% endif %}>{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
+                </select>
+                <input type="text" name="contact" value="{{ current_user.contact or '' }}" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;" required>
+                <button type="submit" style="background:#8B4513;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;">{% if language == "zh" %}保存{% else %}Save{% endif %}</button>
+                <button type="button" onclick="toggleEditContact()" style="background:#ddd;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;">{% if language == "zh" %}取消{% else %}Cancel{% endif %}</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:25px;">
+        <div class="stat-card" style="background:#fff;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <i class="fas fa-book" style="font-size:28px;color:#8B4513;"></i>
+            <h3 style="margin:8px 0 0 0;font-size:28px;">{{ my_books|length }}</h3>
+            <p style="margin:4px 0 0 0;color:#888;font-size:0.9em;">{% if language == "zh" %}发布的图书{% else %}My Books{% endif %}</p>
+        </div>
+        <div class="stat-card" style="background:#fff;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <i class="fas fa-clipboard-list" style="font-size:28px;color:#8B4513;"></i>
+            <h3 style="margin:8px 0 0 0;font-size:28px;">{{ my_requests|length }}</h3>
+            <p style="margin:4px 0 0 0;color:#888;font-size:0.9em;">{% if language == "zh" %}我的需求{% else %}My Requests{% endif %}</p>
+        </div>
+        <div class="stat-card" style="background:#fff;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <i class="fas fa-comments" style="font-size:28px;color:#8B4513;"></i>
+            <h3 style="margin:8px 0 0 0;font-size:28px;"><a href="/forum" style="color:#8B4513;text-decoration:none;">{% if language == "zh" %}去论坛{% else %}Forum{% endif %}</a></h3>
+            <p style="margin:4px 0 0 0;color:#888;font-size:0.9em;">{% if language == "zh" %}论坛入口{% else %}Forum Entry{% endif %}</p>
+        </div>
+    </div>
+
+    <!-- 我发布的图书 -->
+    <div class="card" style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="margin-top:0;"><i class="fas fa-book"></i> {% if language == "zh" %}我发布的图书{% else %}My Books{% endif %}</h3>
+        
+        {% if my_books %}
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f5f0eb;">
+                        <th style="padding:10px;text-align:left;">{% if language == "zh" %}书名{% else %}Book{% endif %}</th>
+                        <th style="padding:10px;text-align:left;">{% if language == "zh" %}作者{% else %}Author{% endif %}</th>
+                        <th style="padding:10px;text-align:center;">{% if language == "zh" %}状态{% else %}Status{% endif %}</th>
+                        <th style="padding:10px;text-align:center;">{% if language == "zh" %}匹配{% else %}Matches{% endif %}</th>
+                        <th style="padding:10px;text-align:center;">{% if language == "zh" %}操作{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in my_books %}
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:10px;">
+                            <a href="/exchange/detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;font-weight:bold;">
+                                {{ book.book_name }}
+                            </a>
+                        </td>
+                        <td style="padding:10px;color:#666;">{{ book.author or '-' }}</td>
+                        <td style="padding:10px;text-align:center;">
+                            {% if book.status == "available" %}
+                                <span style="color:#27ae60;">{% if language == "zh" %}可借{% else %}Available{% endif %}</span>
+                            {% else %}
+                                <span style="color:#999;">{% if language == "zh" %}已借出{% else %}Borrowed{% endif %}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding:10px;text-align:center;">
+                            <a href="/exchange/detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;font-weight:bold;">
+                                {{ book_matches.get(book.id, 0) }}
+                            </a>
+                        </td>
+                        <td style="padding:10px;text-align:center;">
+                            <a href="/exchange/detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;">
+                                <i class="fas fa-eye"></i> {% if language == "zh" %}查看{% else %}View{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color:#999;text-align:center;padding:30px 0;">
+            <i class="fas fa-inbox" style="font-size:40px;display:block;margin-bottom:10px;"></i>
+            {% if language == "zh" %}还没有发布过图书，<a href="/exchange/new" style="color:#8B4513;">去发布</a>{% else %}No books yet, <a href="/exchange/new" style="color:#8B4513;">list one</a>{% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- 我的需求 -->
+    <div class="card" style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <h3 style="margin-top:0;"><i class="fas fa-clipboard-list"></i> {% if language == "zh" %}我的需求{% else %}My Requests{% endif %}</h3>
+        
+        {% if my_requests %}
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f5f0eb;">
+                        <th style="padding:10px;text-align:left;">{% if language == "zh" %}需求内容{% else %}Description{% endif %}</th>
+                        <th style="padding:10px;text-align:center;">{% if language == "zh" %}状态{% else %}Status{% endif %}</th>
+                        <th style="padding:10px;text-align:center;">{% if language == "zh" %}操作{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in my_requests %}
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:10px;">{{ req.description[:50] }}{% if req.description|length > 50 %}...{% endif %}</td>
+                        <td style="padding:10px;text-align:center;">
+                            {% if req.is_active %}
+                                <span style="color:#27ae60;">{% if language == "zh" %}开启{% else %}Active{% endif %}</span>
+                            {% else %}
+                                <span style="color:#999;">{% if language == "zh" %}关闭{% else %}Closed{% endif %}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding:10px;text-align:center;">
+                            {% if req.is_active %}
+                            <a href="/exchange/request/{{ req.id }}/toggle" style="color:#e74c3c;text-decoration:none;font-size:0.85em;" onclick="return confirm('{% if language == "zh" %}确认关闭此需求？{% else %}Close this request?{% endif %}')">
+                                {% if language == "zh" %}关闭{% else %}Close{% endif %}
+                            </a>
+                            {% else %}
+                            <a href="/exchange/request/{{ req.id }}/toggle" style="color:#27ae60;text-decoration:none;font-size:0.85em;">
+                                {% if language == "zh" %}开启{% else %}Enable{% endif %}
+                            </a>
+                            {% endif %}
+                            | <a href="/exchange/request/{{ req.id }}/delete" style="color:#e74c3c;text-decoration:none;font-size:0.85em;" onclick="return confirm('{% if language == "zh" %}确认删除？{% else %}Delete?{% endif %}')">
+                                {% if language == "zh" %}删除{% else %}Delete{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color:#999;text-align:center;padding:30px 0;">
+            <i class="fas fa-inbox" style="font-size:40px;display:block;margin-bottom:10px;"></i>
+            {% if language == "zh" %}还没有发布需求，<a href="/exchange/new-request" style="color:#8B4513;">去发布</a>{% else %}No requests yet, <a href="/exchange/new-request" style="color:#8B4513;">post one</a>{% endif %}
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleEditContact() {
+    var display = document.getElementById('contactDisplay');
+    var edit = document.getElementById('contactEdit');
+    if (display.style.display === 'none') {
+        display.style.display = 'block';
+        edit.style.display = 'none';
+    } else {
+        display.style.display = 'none';
+        edit.style.display = 'block';
+    }
+}
+</script>
+
+<style>
+.personal-container .card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+    transition: box-shadow 0.3s ease;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+}
+</style>
+
+{% endblock %}

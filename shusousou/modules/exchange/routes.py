@@ -1,4 +1,4 @@
-﻿"""
+"""
 书搜搜 - 交换借阅模块
 负责：发布图书、浏览可借列表、联系借书、挂需求、AI匹配
 """
@@ -264,7 +264,9 @@ async def new_exchange(
     book_name: str = Form(...),
     author: str = Form(""),
     requirements: str = Form(""),
-    expectations: str = Form("")
+    expectations: str = Form(""),
+    contact_type: str = Form(""),
+    contact: str = Form("")
 ):
     """提交发布图书"""
     login_check = require_login(request)
@@ -279,6 +281,8 @@ async def new_exchange(
             author=author,
             requirements=requirements,
             expectations=expectations,
+            contact_type=contact_type,
+            contact=contact,
             status="available"
         )
         session.add(book)
@@ -522,6 +526,69 @@ async def trigger_match_scan():
 # ============================================
 # 图书详情 & 站内评论区
 # ============================================
+
+@router.get("/personal")
+async def personal_center(request: Request):
+    """个人中心页面"""
+    login_check = require_login(request)
+    if isinstance(login_check, RedirectResponse):
+        return login_check
+    current_user = login_check
+    
+    lang = request.cookies.get("language", "zh")
+    
+    with get_db() as session:
+        # 我发布的图书
+        from ...database.models import ExchangeBook
+        my_books = session.query(ExchangeBook).filter(
+            ExchangeBook.owner_id == current_user.id
+        ).order_by(ExchangeBook.created_at.desc()).all()
+        
+        # 我挂的需求
+        from ...database.models import ExchangeRequest
+        my_requests = session.query(ExchangeRequest).filter(
+            ExchangeRequest.user_id == current_user.id
+        ).order_by(ExchangeRequest.created_at.desc()).all()
+        
+        # 每本书的匹配数
+        from ...database.models import RequestMatch
+        book_matches = {}
+        for book in my_books:
+            count = session.query(RequestMatch).filter(
+                RequestMatch.book_id == book.id
+            ).count()
+            book_matches[book.id] = count
+    
+    return templates.TemplateResponse(request, "personal.html", {
+        "language": lang,
+        "current_user": current_user,
+        "my_books": my_books,
+        "my_requests": my_requests,
+        "book_matches": book_matches
+    })
+
+
+@router.post("/update-contact")
+async def update_contact(
+    request: Request,
+    contact_type: str = Form(...),
+    contact: str = Form(...)
+):
+    """更新用户联系方式"""
+    login_check = require_login(request)
+    if isinstance(login_check, RedirectResponse):
+        return login_check
+    current_user = login_check
+    
+    with get_db() as session:
+        user = session.query(User).filter(User.id == current_user.id).first()
+        if user:
+            user.contact_type = contact_type
+            user.contact = contact
+            session.commit()
+    
+    return RedirectResponse(url="/exchange/personal", status_code=303)
+
 @router.get("/{book_id}", response_class=HTMLResponse)
 async def exchange_detail(request: Request, book_id: int):
     """图书详情 + 站内评论区"""
@@ -552,12 +619,38 @@ async def exchange_detail(request: Request, book_id: int):
                 "created_at": m.created_at.strftime("%Y-%m-%d %H:%M") if m.created_at else ""
             })
         
+        # 获取匹配列表
+        from ...database.models import RequestMatch, ExchangeRequest, User
+        matches = session.query(RequestMatch, ExchangeRequest, User).join(
+            ExchangeRequest, RequestMatch.request_id == ExchangeRequest.id
+        ).join(
+            User, ExchangeRequest.user_id == User.id
+        ).filter(
+            RequestMatch.book_id == book_id
+        ).all()
+        
+        match_list = []
+        for match, req, req_user in matches:
+            match_list.append({
+                "request_id": req.id,
+                "requester": req_user.username if req_user else "匿名",
+                "requester_id": req_user.id if req_user else 0,
+                "description": req.description[:60] if req.description else "",
+                "contact_type": req_user.contact_type if req_user else "",
+                "contact": req_user.contact if req_user else "",
+                "match_reason": match.match_reason or "",
+                "matched_at": match.created_at.strftime("%Y-%m-%d") if match.created_at else "",
+                "revealed": False
+            })
+        
         book_data = {
             "id": book.id,
             "book_name": book.book_name,
             "author": book.author or "",
             "requirements": book.requirements or "",
             "expectations": book.expectations or "",
+            "contact_type": book.owner.contact_type if book.owner else "",
+            "contact": book.owner.contact if book.owner else "",
             "owner": book.owner.username if book.owner else "匿名",
             "owner_id": book.owner_id,
             "status": book.status,
@@ -568,7 +661,8 @@ async def exchange_detail(request: Request, book_id: int):
         "language": lang,
         "current_user": current_user,
         "book": book_data,
-        "messages": msg_list
+        "messages": msg_list,
+        "matches": match_list
     })
 
 
@@ -645,4 +739,6 @@ async def close_exchange(request: Request, book_id: int):
     
     return RedirectResponse(url="/exchange/", status_code=303)
 
-
+# ============================================
+# 个人中心
+# ============================================
