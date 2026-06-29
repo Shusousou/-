@@ -33,10 +33,12 @@ env = Environment(loader=loader, cache_size=0)
 templates = Jinja2Templates(env=env)
 
 
+# 全局引擎
+_db_path = os.path.join(BASE_DIR, "database", "database.db")
+_db_engine = create_engine(f"sqlite:///{_db_path}", connect_args={"check_same_thread": False})
+
 def get_db():
-    db_path = os.path.join(BASE_DIR, "database", "database.db")
-    db_engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
-    return DBSession(db_engine)
+    return DBSession(_db_engine)
 
 
 def require_login(request: Request):
@@ -254,7 +256,9 @@ async def new_exchange_page(request: Request):
     
     return templates.TemplateResponse(request, "new_exchange.html", {
         "language": lang,
-        "current_user": current_user
+        "current_user": current_user,
+        "user_contact": current_user.contact or "",
+        "user_contact_type": current_user.contact_type or ""
     })
 
 
@@ -265,8 +269,10 @@ async def new_exchange(
     author: str = Form(""),
     requirements: str = Form(""),
     expectations: str = Form(""),
+    contact: str = Form(...),
     contact_type: str = Form(""),
-    contact: str = Form("")
+    email_notify: str = Form("false")
+
 ):
     """提交发布图书"""
     login_check = require_login(request)
@@ -281,8 +287,10 @@ async def new_exchange(
             author=author,
             requirements=requirements,
             expectations=expectations,
-            contact_type=contact_type,
             contact=contact,
+            contact_type=contact_type,
+            email_notify=(email_notify == "true"),
+
             status="available"
         )
         session.add(book)
@@ -330,36 +338,7 @@ async def new_request(
         session.add(req)
         session.commit()
         
-        match_count = 0
-        books = session.query(ExchangeBook).filter(
-            ExchangeBook.status == "available"
-        ).all()
         
-        for book in books:
-            if book.owner_id == current_user.id:
-                continue
-            existing = session.query(RequestMatch).filter(
-                RequestMatch.request_id == req.id,
-                RequestMatch.book_id == book.id
-            ).first()
-            if existing:
-                continue
-            
-            is_match, reason = ai_match_check(
-                req.description, book.book_name, book.author or "", book.requirements or ""
-            )
-            if is_match and reason:
-                match = RequestMatch(request_id=req.id, book_id=book.id, match_reason=reason)
-                session.add(match)
-                match_count += 1
-                user = session.query(User).filter(User.id == current_user.id).first()
-                if user and user.email:
-                    from ...mailer import send_email
-                    subject = "书搜搜 - 你挂的需求有匹配的图书啦!"
-                    body = f"<h2>书搜搜</h2><p>你好 {user.username}，</p><p>需求「{req.description[:50]}」匹配到《{book.book_name}》</p><p>理由：{reason}</p><p><a href=\"http://localhost:8000/exchange/{book.id}\">查看详情</a></p>"
-                    send_email(user.email, subject, body)
-        
-        session.commit()
     
     return RedirectResponse(url="/exchange/my-requests", status_code=303)
 
@@ -619,29 +598,11 @@ async def exchange_detail(request: Request, book_id: int):
                 "created_at": m.created_at.strftime("%Y-%m-%d %H:%M") if m.created_at else ""
             })
         
-        # 获取匹配列表
-        from ...database.models import RequestMatch, ExchangeRequest, User
-        matches = session.query(RequestMatch, ExchangeRequest, User).join(
-            ExchangeRequest, RequestMatch.request_id == ExchangeRequest.id
-        ).join(
-            User, ExchangeRequest.user_id == User.id
-        ).filter(
-            RequestMatch.book_id == book_id
-        ).all()
-        
-        match_list = []
-        for match, req, req_user in matches:
-            match_list.append({
-                "request_id": req.id,
-                "requester": req_user.username if req_user else "匿名",
-                "requester_id": req_user.id if req_user else 0,
-                "description": req.description[:60] if req.description else "",
-                "contact_type": req_user.contact_type if req_user else "",
-                "contact": req_user.contact if req_user else "",
-                "match_reason": match.match_reason or "",
-                "matched_at": match.created_at.strftime("%Y-%m-%d") if match.created_at else "",
-                "revealed": False
-            })
+        # 获取发布者的联系方式（优先用图书自带的，没有则用个人资料里的）
+        book_contact = book.contact or ""
+        if not book_contact and book.owner:
+            book_contact = book.owner.contact or ""
+
         
         book_data = {
             "id": book.id,
@@ -649,20 +610,44 @@ async def exchange_detail(request: Request, book_id: int):
             "author": book.author or "",
             "requirements": book.requirements or "",
             "expectations": book.expectations or "",
-            "contact_type": book.owner.contact_type if book.owner else "",
-            "contact": book.owner.contact if book.owner else "",
+            "contact": book_contact,
+            "contact_type": book.contact_type or (book.owner.contact_type if book.owner else ""),
+            "email_notify": book.email_notify if hasattr(book, 'email_notify') else True,
+
             "owner": book.owner.username if book.owner else "匿名",
             "owner_id": book.owner_id,
             "status": book.status,
             "created_at": book.created_at.strftime("%Y-%m-%d") if book.created_at else ""
         }
+        
+        # 查询匹配到这本书的需求
+        book_matches = session.query(RequestMatch).filter(
+            RequestMatch.book_id == book_id
+        ).order_by(RequestMatch.created_at.desc()).all()
+        
+        matched_requests = []
+        for m in book_matches:
+            req = session.query(ExchangeRequest).filter(ExchangeRequest.id == m.request_id).first()
+            if req:
+                req_user = session.query(User).filter(User.id == req.user_id).first()
+                matched_requests.append({
+                    "req_id": req.id,
+                    "description": req.description,
+                    "username": req_user.username if req_user else "匿名",
+                    "user_id": req.user_id,
+                    "contact": req_user.contact if req_user else "",
+                    "contact_type": req_user.contact_type if req_user else "",
+                    "reason": m.match_reason or "",
+                    "created_at": m.created_at.strftime("%m-%d %H:%M") if m.created_at else ""
+                })
     
     return templates.TemplateResponse(request, "exchange_detail.html", {
         "language": lang,
         "current_user": current_user,
         "book": book_data,
         "messages": msg_list,
-        "matches": match_list
+        "matched_requests": matched_requests
+
     })
 
 
@@ -739,6 +724,82 @@ async def close_exchange(request: Request, book_id: int):
     
     return RedirectResponse(url="/exchange/", status_code=303)
 
-# ============================================
 # 个人中心
 # ============================================
+=======
+
+@router.post("/{book_id}/toggle-notify")
+async def toggle_notify(request: Request, book_id: int, email_notify: str = Form("false")):
+    """切换邮件通知开关"""
+    login_check = require_login(request)
+    if isinstance(login_check, RedirectResponse):
+        return login_check
+    current_user = login_check
+    
+    with get_db() as session:
+        book = session.query(ExchangeBook).filter(
+            ExchangeBook.id == book_id,
+            ExchangeBook.owner_id == current_user.id
+        ).first()
+        
+        if book:
+            book.email_notify = (email_notify == "true")
+            session.commit()
+    
+    return RedirectResponse(url=f"/exchange/{book_id}", status_code=303)
+
+
+
+
+# ============================================
+# 删除需求
+# ============================================
+@router.post("/request/{request_id}/delete")
+async def delete_request(request: Request, request_id: int):
+    """删除需求（包括关联的匹配记录）"""
+    login_check = require_login(request)
+    if isinstance(login_check, RedirectResponse):
+        return login_check
+    current_user = login_check
+    
+    with get_db() as session:
+        req = session.query(ExchangeRequest).filter(
+            ExchangeRequest.id == request_id,
+            ExchangeRequest.user_id == current_user.id
+        ).first()
+        
+        if req:
+            session.query(RequestMatch).filter(
+                RequestMatch.request_id == request_id
+            ).delete()
+            session.delete(req)
+            session.commit()
+            print(f"[Delete] 用户 {current_user.username} 删除了需求 #{request_id}")
+    
+    return RedirectResponse(url="/exchange/my-requests", status_code=303)
+
+
+# ============================================
+# 重新开启需求
+# ============================================
+@router.post("/request/{request_id}/reopen")
+async def reopen_request(request: Request, request_id: int):
+    """重新开启已关闭的需求"""
+    login_check = require_login(request)
+    if isinstance(login_check, RedirectResponse):
+        return login_check
+    current_user = login_check
+    
+    with get_db() as session:
+        req = session.query(ExchangeRequest).filter(
+            ExchangeRequest.id == request_id,
+            ExchangeRequest.user_id == current_user.id
+        ).first()
+        
+        if req:
+            req.is_active = True
+            session.commit()
+            print(f"[Reopen] 用户 {current_user.username} 重新开启了需求 #{request_id}")
+    
+    return RedirectResponse(url="/exchange/my-requests", status_code=303)
+

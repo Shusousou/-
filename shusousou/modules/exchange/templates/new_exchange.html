@@ -38,27 +38,37 @@
             </label>
             <div style="display:flex;gap:5px;margin-bottom:5px;">
                 <textarea id="expectations" name="expectations" rows="3" style="flex:1;"
-                          placeholder="{% if language == "zh" %}简要描述本书内容，帮助他人了解{% else %}Brief description of the book{% endif %}"></textarea>
+                          placeholder="{% if language == "zh" %}可以就书籍内容展开介绍，也可以谈谈自己的阅读感想{% else %}e.g. Please take good care of the book...{% endif %}"></textarea>
+
             </div>
         </div>
         
         <div class="form-group">
-            <label><i class="fas fa-phone"></i> 
-                {% if language == "zh" %}联系方式 *{% else %}Contact *{% endif %}
+            <label for="contact">
+                {% if language == "zh" %}📞 联系方式 *{% else %}📞 Contact *{% endif %}
             </label>
             <div style="display:flex;gap:8px;">
-                <select id="pub_contact_type" name="contact_type" style="flex:0 0 120px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9em;">
-                    <option value="">{% if language == "zh" %}选择类型{% else %}Type{% endif %}</option>
-                    <option value="微信">WeChat</option>
-                    <option value="手机号">{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
-                    <option value="QQ">QQ</option>
-                    <option value="邮箱">{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
-                    <option value="其他">{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
+                <select id="contact_type" name="contact_type" style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9em;width:110px;flex-shrink:0;">
+                    <option value="">{% if language == "zh" %}选择类型{% else %}Select type{% endif %}</option>
+                    <option value="微信" {% if user_contact_type == "微信" %}selected{% endif %}>WeChat</option>
+                    <option value="手机号" {% if user_contact_type == "手机号" %}selected{% endif %}>{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
+                    <option value="QQ" {% if user_contact_type == "QQ" %}selected{% endif %}>QQ</option>
+                    <option value="邮箱" {% if user_contact_type == "邮箱" %}selected{% endif %}>{% if language == "zh" %}邮箱{% else %}Email{% endif %}</option>
+                    <option value="其他" {% if user_contact_type == "其他" %}selected{% endif %}>{% if language == "zh" %}其他{% else %}Other{% endif %}</option>
                 </select>
-                <input type="text" id="pub_contact" name="contact" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;"
-                       placeholder="{% if language == "zh" %}联系方式（用于需求者联系你）{% else %}Contact info for requesters{% endif %}" required>
+                <input type="text" id="contact" name="contact" required style="flex:1;"
+                       value="{{ user_contact }}"
+                       placeholder="{% if language == "zh" %}例如：微信号、手机号、QQ等{% else %}e.g. WeChat ID, Phone No.{% endif %}">
             </div>
         </div>
+        
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="email_notify" name="email_notify" checked value="true">
+                <span>{% if language == "zh" %}📧 开启邮件通知（匹配到需求时发邮件提醒）{% else %}📧 Email notification when matched{% endif %}</span>
+            </label>
+        </div>
+        
 
         <div style="display:flex;gap:10px;margin-top:10px;">
             <button type="button" class="btn btn-primary" style="background:#5D8AA8;" onclick="aiGenerate()">

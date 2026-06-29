@@ -1,5 +1,5 @@
 """
-书搜搜 - 主入口文件
+书搜�?- 主入口文�?
 启动整个网站服务
 """
 
@@ -13,13 +13,13 @@ import os
 from .config import HOST, PORT, DEBUG, SITE_NAME, DEFAULT_LANGUAGE
 from .database.models import init_database
 
-# 获取项目根目录 (shusousou 即 D:\shusousou\shusousou)
+# 获取项目根目�?(shusousou �?D:\shusousou\shusousou)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 创建FastAPI应用
-app = FastAPI(title="书搜搜 / BookSearch")
+app = FastAPI(title="书搜�?/ BookSearch")
 
-# 挂载静态文件
+# 挂载静态文�?
 static_dir = os.path.join(BASE_DIR, "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
@@ -83,9 +83,9 @@ async def home(request: Request):
 # ============================================
 @app.on_event("startup")
 async def startup():
-    """启动时初始化数据库"""
+    """启动时初始化数据�?""
     init_database()
-    print("书搜搜服务已启动！")
+    print("书搜搜服务已启动�?)
     print(f"访问地址：http://localhost:{PORT}")
 
 

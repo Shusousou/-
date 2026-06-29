@@ -1,63 +1,70 @@
-﻿"""
-书搜搜 - 配置文件
-所有可配置的参数都在这里，方便统一管理
+"""
+������ - �����ļ�
+���п����õĲ��������������ͳһ����
 """
 
 import os
 
 # ============================================
-# DeepSeek AI 配置
+# DeepSeek AI ����
 # ============================================
-# 在下方填入你的 DeepSeek API Key
-# 获取方式：https://platform.deepseek.com/
+# ���·�������� DeepSeek API Key
+# ��ȡ��ʽ��https://platform.deepseek.com/
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")  # 
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
-DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_MODEL = "deepseek-v4-flash"
 
 # ============================================
-# 网站基本配置
+# ��վ��������
 # ============================================
 SITE_NAME = {
-    "zh": "书搜搜",
+    "zh": "������",
     "en": "BookSearch"
 }
 SITE_DESCRIPTION = {
-    "zh": "AI智能图书推荐平台",
+    "zh": "AI����ͼ���Ƽ�ƽ̨",
     "en": "AI-Powered Book Recommendation Platform"
 }
 
-# 默认语言
-DEFAULT_LANGUAGE = "zh"  # zh = 中文, en = English
+# Ĭ������
+DEFAULT_LANGUAGE = "zh"  # zh = ����, en = English
 
 # ============================================
-# 数据库配置
+# ���ݿ�����
 # ============================================
-# 开发阶段使用SQLite
+# �����׶�ʹ��SQLite
 DATABASE_URL = "sqlite:///./shusousou/database/database.db"
 
 # ============================================
-# 邮件服务配置
+# �ʼ���������
 # ============================================
-# 用于发送验证邮件和通知邮件
-# 以QQ邮箱为例（需要开启SMTP服务）
+# ���ڷ�����֤�ʼ���֪ͨ�ʼ�
+# ��QQ����Ϊ������Ҫ����SMTP����
 MAIL_SERVER = "smtp.qq.com"
 MAIL_PORT = 587
+<<<<<<< HEAD
 MAIL_USERNAME = ""  # ← 请替换为你的邮箱
 MAIL_PASSWORD = ""  # ← 请替换为你的SMTP授权码
 MAIL_FROM = ""      # ← 请替换为发件人邮箱
+=======
+MAIL_USERNAME = "2024604689@qq.com"  # �� ���滻Ϊ�������
+MAIL_PASSWORD = "eqlovlpdiqfubbeh"  # �� ���滻Ϊ���SMTP��Ȩ��
+
+MAIL_FROM = "2024604689@qq.com"      # �� ���滻Ϊ����������
+>>>>>>> 3b86434654b7019dca9d855a2c39142a05552783
 
 # ============================================
-# 服务器配置
+# ����������
 # ============================================
 HOST = "0.0.0.0"
 PORT = 8000
 DEBUG = True
 
 # ============================================
-# 图书馆模拟API配置
+# ͼ���ģ��API����
 # ============================================
-# 开发阶段使用模拟数据
-LIBRARY_API_MODE = "mock"  # "mock" = 模拟数据, "real" = 真实API
-LIBRARY_API_URL = "http://localhost:8000/api/library"  # 模拟API地址
+# �����׶�ʹ��ģ������
+LIBRARY_API_MODE = "mock"  # "mock" = ģ������, "real" = ��ʵAPI
+LIBRARY_API_URL = "http://localhost:8000/api/library"  # ģ��API��ַ
 

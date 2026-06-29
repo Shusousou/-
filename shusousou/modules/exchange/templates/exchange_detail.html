@@ -1,5 +1,28 @@
 ﻿{% extends "base.html" %}
-{% block title %}{{ book.book_name }} - 书搜搜{% endblock %}
+{% block title %}{{ book.book_name }} - 书搜搜<!-- 联系TA弹窗 -->
+<div id="contact-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;" onclick="closeContact()">
+    <div style="background:#fff;max-width:400px;margin:200px auto;padding:30px;border-radius:12px;text-align:center;" onclick="event.stopPropagation()">
+        <h3 style="margin:0 0 15px;color:#8B4513;">📞 {{ language == "zh" and "联系TA" or "Contact" }}</h3>
+        <p id="contact-name" style="font-size:1.1em;color:#333;margin-bottom:10px;"></p>
+        <p id="contact-label" style="font-size:0.9em;color:#888;margin-bottom:5px;"></p>
+        <p id="contact-info" style="font-size:1.2em;font-weight:bold;color:#5D8AA8;padding:15px;background:#f5f0eb;border-radius:8px;"></p>
+        <button onclick="closeContact()" class="btn btn-secondary" style="margin-top:15px;">{{ language == "zh" and "关闭" or "Close" }}</button>
+    </div>
+</div>
+
+<script>
+function showContact(username, contact, contactType) {
+    document.getElementById('contact-name').innerText = username;
+    document.getElementById('contact-label').innerText = contactType ? '📞 ' + contactType : '📞 ' + '联系方式';
+    document.getElementById('contact-info').innerText = contact;
+    document.getElementById('contact-modal').style.display = 'block';
+}
+function closeContact() {
+    document.getElementById('contact-modal').style.display = 'none';
+}
+</script>
+
+{% endblock %}
 {% block content %}
 
 <div style="max-width:800px;margin:0 auto;">
@@ -66,7 +89,7 @@
         
         <!-- 发送消息 -->
         {% if book.status == "available" %}
-        <form method="post" action="/exchange/{{ book.id }}/message" style="margin-top:15px;">
+        <form method="post" action="/exchange/{{ book.id }}/message" style="margin-top:15px;" id="message-form">
             <div class="form-group">
                 <textarea name="content" rows="3" required
                           placeholder="{{ language == "zh" and '写下你想说的话...' or 'Write your message...' }}"
@@ -89,11 +112,69 @@
         {% endif %}
     </div>
     
+    <!-- 邮件通知开关（仅图书主人可见） -->
+    {% if current_user.id == book.owner_id %}
+    <div style="margin-top:25px;background:#f9f6f0;padding:12px 15px;border-radius:8px;display:flex;align-items:center;gap:10px;">
+        <form method="post" action="/exchange/{{ book.id }}/toggle-notify" style="display:flex;align-items:center;gap:8px;">
+            <label style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" name="email_notify" value="true" 
+                       onchange="this.form.submit()" 
+                       {% if book.email_notify %}checked{% endif %}>
+                <span>📧 {% if language == "zh" %}匹配到需求时邮件通知我{% else %}Email me when matched{% endif %}</span>
+            </label>
+        </form>
+    </div>
+    {% endif %}
+    
+    <!-- 匹配到的需求 -->
+    {% if matched_requests and current_user.id == book.owner_id %}
+    <div style="margin-top:30px;">
+        <h3 style="color:#8B4513;">🎯 {{ language == "zh" and "匹配到的需求" or "Matched Requests" }}</h3>
+        {% for mr in matched_requests %}
+        <div style="background:#f5f0eb;padding:12px 15px;border-radius:8px;margin-bottom:10px;border-left:3px solid #D2B48C;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <p style="margin:0;font-weight:bold;">👤 {{ mr.username }}</p>
+                    <p style="margin:5px 0;color:#555;">{{ mr.description }}</p>
+                    <p style="margin:0;font-size:0.85em;color:#888;">💡 {{ mr.reason }}</p>
+                </div>
+                <button onclick="showContact('{{ mr.username }}', '{{ mr.contact }}', '{{ mr.contact_type }}')" class="btn btn-primary" style="white-space:nowrap;font-size:0.85em;padding:8px 15px;border:none;cursor:pointer;">
+                    📞 {{ language == "zh" and "联系TA" or "Contact" }}
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
     <div style="margin-top:20px;">
         <a href="/exchange/" class="btn btn-secondary">
             ← {{ language == "zh" and "返回列表" or "Back to List" }}
         </a>
     </div>
 </div>
+
+<!-- 联系TA弹窗 -->
+<div id="contact-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;" onclick="closeContact()">
+    <div style="background:#fff;max-width:400px;margin:200px auto;padding:30px;border-radius:12px;text-align:center;" onclick="event.stopPropagation()">
+        <h3 style="margin:0 0 15px;color:#8B4513;">📞 {{ language == "zh" and "联系TA" or "Contact" }}</h3>
+        <p id="contact-name" style="font-size:1.1em;color:#333;margin-bottom:10px;"></p>
+        <p id="contact-label" style="font-size:0.9em;color:#888;margin-bottom:5px;"></p>
+        <p id="contact-info" style="font-size:1.2em;font-weight:bold;color:#5D8AA8;padding:15px;background:#f5f0eb;border-radius:8px;"></p>
+        <button onclick="closeContact()" class="btn btn-secondary" style="margin-top:15px;">{{ language == "zh" and "关闭" or "Close" }}</button>
+    </div>
+</div>
+
+<script>
+function showContact(username, contact, contactType) {
+    document.getElementById('contact-name').innerText = username;
+    document.getElementById('contact-label').innerText = contactType ? '📞 ' + contactType : '📞 ' + '联系方式';
+    document.getElementById('contact-info').innerText = contact;
+    document.getElementById('contact-modal').style.display = 'block';
+}
+function closeContact() {
+    document.getElementById('contact-modal').style.display = 'none';
+}
+</script>
 
 {% endblock %}
