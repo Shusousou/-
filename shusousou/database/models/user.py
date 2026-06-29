@@ -17,7 +17,11 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False, index=True)
     password_hash = Column(String(200), nullable=False)
     is_verified = Column(Boolean, default=False)
+    verify_code = Column(String(10), nullable=True)
+    verify_code_expire = Column(DateTime, nullable=True)
     verify_token = Column(String(200), nullable=True)
+    contact = Column(String(200), default="")
+    contact_type = Column(String(20), default="")
     created_at = Column(DateTime, default=datetime.now)
 
     # 关联
