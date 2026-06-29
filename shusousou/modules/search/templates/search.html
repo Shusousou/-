@@ -2,161 +2,327 @@
 {% block title %}{% if language == "zh" %}书搜搜 - 搜索{% else %}BookSearch - Search{% endif %}{% endblock %}
 {% block content %}
 
-<div class="search-section">
-    <h2 style="text-align:center;margin-bottom:20px;color:#8B4513;">
-        {% if language == "zh" %}🔍 告诉我你想看什么书{% else %}🔍 Tell me what you want to read{% endif %}
-    </h2>
-    
-    <form method="post" action="/search/" class="search-box" id="searchForm">
-        <input type="text" name="query" class="search-input" 
-               placeholder="{% if language == "zh" %}例如：我想看机器学习的入门书{% else %}e.g. I want to learn machine learning{% endif %}"
-               value="{{ query }}" required>
-        <button type="submit" class="search-btn" id="searchBtn">
-            {% if language == "zh" %}搜书{% else %}Search{% endif %}
-        </button>
-    </form>
-</div>
+<style>
+.chat-container { max-width: 800px; margin: 0 auto; }
+.chat-turn { margin-bottom: 20px; }
+.chat-user { text-align: right; margin-bottom: 5px; }
+.chat-user-bubble {
+    display: inline-block; background: #8B4513; color: #fff;
+    padding: 10px 16px; border-radius: 18px 18px 4px 18px;
+    max-width: 70%; font-size: 0.95em; text-align: left;
+}
+.chat-assistant { margin-bottom: 5px; }
+.chat-assistant-label { color: #8B4513; font-weight: bold; font-size: 0.9em; margin-bottom: 5px; }
+.chat-assistant-bubble {
+    display: inline-block; background: #f5f0eb;
+    padding: 10px 16px; border-radius: 18px 18px 18px 4px;
+    max-width: 100%; font-size: 0.95em; color: #333;
+}
+.chat-results { margin-top: 10px; }
+.suggestions { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.suggestion-chip {
+    display: inline-block; background: #fff; border: 1px solid #8B4513;
+    color: #8B4513; padding: 6px 14px; border-radius: 16px;
+    font-size: 0.85em; cursor: pointer; text-decoration: none; transition: all 0.2s;
+}
+.suggestion-chip:hover { background: #8B4513; color: #fff; }
+.chat-prompt {
+    text-align: center; margin-top: 20px; padding: 15px;
+    background: #faf8f5; border-radius: 12px; border: 1px dashed #d0c8c0;
+}
+.chat-prompt p { color: #666; margin-bottom: 10px; font-size: 0.95em; }
+.followup-box { display: flex; gap: 10px; }
+.followup-input {
+    flex: 1; padding: 10px 15px; border: 2px solid #e0d8d0;
+    border-radius: 20px; font-size: 0.95em; outline: none; transition: border-color 0.2s;
+}
+.followup-input:focus { border-color: #8B4513; }
+.followup-btn {
+    padding: 10px 20px; background: #8B4513; color: #fff;
+    border: none; border-radius: 20px; font-size: 0.95em; cursor: pointer; white-space: nowrap;
+}
+.followup-btn:hover { background: #A0522D; }
+.followup-btn-secondary {
+    padding: 10px 20px; background: #fff; color: #8B4513;
+    border: 1px solid #8B4513; border-radius: 20px; font-size: 0.95em; cursor: pointer; white-space: nowrap;
+}
+.followup-btn-secondary:hover { background: #f0ebe6; }
+.search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+.search-input {
+    flex: 1; padding: 14px 20px; border: 2px solid #e0d8d0;
+    border-radius: 8px; font-size: 1.1em; outline: none; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: #8B4513; }
+.search-btn {
+    padding: 14px 30px; background: #8B4513; color: #fff;
+    border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer;
+}
+.search-btn:hover { background: #A0522D; }
+.action-section { margin-top: 15px; }
+.action-section-title {
+    font-size: 0.85em; color: #999; text-align: left;
+    margin-bottom: 8px; font-weight: 500;
+}
+.action-row { display: flex; gap: 10px; margin-bottom: 8px; }
+.action-row .followup-box { flex: 1; }
 
-<!-- 加载动画 -->
-<div id="loading" style="display:none;text-align:center;padding:40px;">
-    <div style="font-size:48px;margin-bottom:15px;">📚</div>
-    <div style="font-size:1.2em;color:#8B4513;margin-bottom:10px;">
-        {% if language == "zh" %}努力翻找中...{% else %}Searching the shelves...{% endif %}
+/* 搜索加载动画 */
+.search-loading {
+    text-align: center;
+    padding: 30px;
+    color: #8B4513;
+}
+.search-loading .loading-dots {
+    display: inline-block;
+}
+.search-loading .loading-dots span {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8B4513;
+    margin: 0 4px;
+    animation: dot-bounce 1.4s infinite ease-in-out both;
+}
+.search-loading .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.search-loading .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.search-loading .loading-dots span:nth-child(3) { animation-delay: 0s; }
+@keyframes dot-bounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+}
+.chat-turn-new {
+    animation: fadeInUp 0.4s ease-out;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.typing-cursor::after {
+    content: '|';
+    animation: blink 1s step-end infinite;
+    color: #8B4513;
+    margin-left: 2px;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}
+</style>
+
+<div class="chat-container">
+    <div id="searchLoading" class="search-loading" style="display:none;">
+        <div style="font-size:1.1em;margin-bottom:10px;">📚 书搜搜正在查找...</div>
+        <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
-    <div style="font-size:0.9em;color:#999;">
-        {% if language == "zh" %}AI正在分析你的需求，翻遍图书馆找好书{% else %}AI is analyzing your request and searching the library{% endif %}
+
+    {% if not history %}
+    <div style="text-align:center;margin:40px 0 30px;">
+        <h2 style="color:#8B4513;margin-bottom:8px;">📚 告诉我你想看什么书</h2>
+        <p style="color:#999;font-size:0.9em;">可以直接说书名、作者、学科，或者描述你现在的状态</p>
     </div>
-    <div style="margin-top:15px;">
-        <span class="loading-dot">.</span>
-        <span class="loading-dot">.</span>
-        <span class="loading-dot">.</span>
+    <form method="post" action="/search/" class="search-box">
+        <input type="hidden" name="mode" value="auto">
+        <input type="text" name="query" class="search-input"
+               placeholder="例如：我想看机器学习的入门书" value="" required>
+        <button type="submit" class="search-btn">🔍 开始搜书</button>
+    </form>
+    {% endif %}
+
+    {% for turn in history %}
+    <div class="chat-turn" id="turn-{{ loop.index0 }}">
+        {% if turn.role == "user" %}
+        <div class="chat-user">
+            <div class="chat-user-bubble">{{ turn.content }}</div>
+        </div>
+        {% else %}
+        <div class="chat-assistant">
+            <div class="chat-assistant-label">📚 书搜搜</div>
+            <div class="chat-assistant-bubble">{{ turn.content }}</div>
+            {% if turn.results %}
+            <div class="chat-results" id="results-{{ loop.index0 }}">
+                {% set is_last_turn = loop.last %}
+                {% for book in turn.results %}
+                {% if is_last_turn and loop.index0 >= show_count %}
+                <div class="result-card result-hidden" style="display:none;">
+                {% else %}
+                <div class="result-card result-visible">
+                {% endif %}
+                    <h3>📘 {{ book.title }}</h3>
+                    {% if book.title_cn and book.title_cn != book.title %}
+                    <div style="color:#A0522D;font-size:0.9em;margin-bottom:4px;">📖 中文书名：{{ book.title_cn }}</div>
+                    {% endif %}
+                    {% if book.reading_reason %}
+                    <div style="background:#fff8e1;border-left:3px solid #f57f17;padding:8px 12px;border-radius:6px;margin:6px 0;font-size:0.9em;">
+                        📋 <strong>推荐理由：</strong>{{ book.reading_reason }}
+                    </div>
+                    {% endif %}
+                    <div class="book-meta">
+                        <span>✍️ {{ book.author }}</span>
+                        {% if book.isbn %}<span>📖 ISBN: {{ book.isbn }}</span>{% endif %}
+                    </div>
+                    <div style="margin:8px 0;">
+                        {% if book.library_status == "available" %}
+                            <span class="status-tag status-available">✅ {% if language == "zh" %}在馆{% else %}Available{% endif %}
+                                {% if book.library_location %}（{{ book.library_location }}）{% endif %}</span>
+                        {% elif book.library_status == "borrowed" %}
+                            <span class="status-tag status-borrowed">⏳ {% if language == "zh" %}已借出，预计 {{ book.library_due_date }} 归还{% else %}Borrowed, due {{ book.library_due_date }}{% endif %}</span>
+                        {% else %}
+                            <span class="status-tag status-notfound">📝 {% if language == "zh" %}未在图书馆找到{% else %}Not found{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% if is_last_turn and has_more %}
+                <div style="text-align:center;margin:10px 0;">
+                    <button onclick="expandResults('results-{{ loop.index0 }}')" class="btn btn-secondary" style="padding:8px 24px;border-radius:20px;">
+                        📚 {% if language == "zh" %}展开更多结果（共 {{ turn.results|length }} 本）{% else %}Show more results ({{ turn.results|length }} total){% endif %}
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
+    {% endfor %}
+
+    {% if fallback_books %}
+    <div class="chat-turn">
+        <div class="chat-assistant">
+            <div class="chat-assistant-label">📚 书搜搜推荐</div>
+            {% for fb in fallback_books %}
+            <div class="result-card">
+                <h3>📘 {{ fb.title }}</h3>
+                {% if fb.title_cn and fb.title_cn != fb.title %}
+                <div style="color:#A0522D;font-size:0.9em;margin-bottom:4px;">📖 中文书名：{{ fb.title_cn }}</div>
+                {% endif %}
+                <div class="book-meta">
+                    <span>✍️ {{ fb.author }}</span>
+                    {% if fb.isbn %}<span>📖 ISBN: {{ fb.isbn }}</span>{% endif %}
+                </div>
+                <div style="margin:8px 0;">
+                    {% if fb.library_status == "available" %}
+                        <span class="status-tag status-available">✅ {% if language == "zh" %}在馆{% else %}Available{% endif %}
+                            {% if fb.library_location %}（{{ fb.library_location }}）{% endif %}</span>
+                    {% elif fb.library_status == "borrowed" %}
+                        <span class="status-tag status-borrowed">⏳ {% if language == "zh" %}已借出{% else %}Borrowed{% endif %}</span>
+                    {% else %}
+                        <span class="status-tag status-notfound">📝 {% if language == "zh" %}未在图书馆找到{% else %}Not found{% endif %}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if results is not none and history %}
+    <div class="chat-prompt">
+        {% if suggestions %}
+        <div style="margin-bottom:15px;">
+            <p style="color:#666;margin-bottom:8px;font-size:0.9em;">💡 试试缩小范围：</p>
+            <div class="suggestions" style="justify-content:center;">
+                {% for s in suggestions %}
+                <form method="post" action="/search/" style="display:inline;">
+                    <input type="hidden" name="mode" value="followup">
+                    <input type="hidden" name="query" value="再帮我看看{{ s }}相关的">
+                    <button type="submit" class="suggestion-chip">🔍 {{ s }}</button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="action-section">
+            <div class="action-section-title">💬 在当前结果中进一步缩小范围</div>
+            <div class="action-row">
+                <form method="post" action="/search/" class="followup-box">
+                    <input type="hidden" name="mode" value="followup">
+                    <input type="text" name="query" class="followup-input"
+                           placeholder="例如：再帮我找深度学习的、不要Python的..." required>
+                    <button type="submit" class="followup-btn">缩小范围</button>
+                </form>
+                <form method="post" action="/search/" style="display:inline;">
+                    <input type="hidden" name="mode" value="reading_order">
+                    <input type="hidden" name="query" value="推荐阅读顺序">
+                    <button type="submit" class="followup-btn-secondary" style="white-space:nowrap;">📋 推荐阅读顺序</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="action-section">
+            <div class="action-section-title">🆕 换个话题，重新开始</div>
+            <div class="action-row">
+                <form method="post" action="/search/" class="followup-box">
+                    <input type="hidden" name="mode" value="new">
+                    <input type="text" name="query" class="followup-input"
+                           placeholder="例如：想看心理学的书..." required>
+                    <button type="submit" class="followup-btn-secondary">新搜索</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if error and not history %}
+    <div class="message message-error" style="margin-top:20px;">{{ error }}</div>
+    {% if suggestions %}
+    <div class="suggestions" style="justify-content:center;margin-top:15px;">
+        {% for s in suggestions %}
+        <form method="post" action="/search/" style="display:inline;">
+            <input type="hidden" name="query" value="我想看{{ s}}相关的书">
+            <button type="submit" class="suggestion-chip">🔍 看看{{ s }}</button>
+        </form>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
 </div>
 
 <script>
-    document.getElementById("searchForm").addEventListener("submit", function() {
-        document.getElementById("searchForm").style.display = "none";
-        document.getElementById("loading").style.display = "block";
+function expandResults(containerId) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    var hiddenItems = container.querySelectorAll('.result-hidden');
+    var button = container.querySelector('.btn-secondary');
+    for (var i = 0; i < 5 && i < hiddenItems.length; i++) {
+        hiddenItems[i].style.display = 'block';
+        hiddenItems[i].classList.remove('result-hidden');
+        hiddenItems[i].classList.add('result-visible');
+    }
+    var remaining = container.querySelectorAll('.result-hidden');
+    if (remaining.length === 0 && button) {
+        button.style.display = 'none';
+    } else if (button) {
+        button.textContent = '📚 展开更多（还剩 ' + remaining.length + ' 本）';
+    }
+}
+
+var forms = document.querySelectorAll('form[action="/search/"]');
+for (var i = 0; i < forms.length; i++) {
+    forms[i].addEventListener('submit', function() {
+        document.getElementById('searchLoading').style.display = 'block';
     });
+}
+
+window.onload = function() {
+    var turns = document.querySelectorAll('.chat-turn');
+    if (turns.length > 0) {
+        var lastTurn = turns[turns.length - 1];
+        lastTurn.classList.add('chat-turn-new');
+        lastTurn.scrollIntoView(true);
+        window.scrollBy(0, -20);
+    }
+    var bubbles = document.querySelectorAll('.chat-assistant-bubble');
+    if (bubbles.length > 0) {
+        var lastBubble = bubbles[bubbles.length - 1];
+        lastBubble.classList.add('typing-cursor');
+        setTimeout(function() {
+            lastBubble.classList.remove('typing-cursor');
+        }, 800);
+    }
+    var followupInput = document.querySelector('.followup-input');
+    if (followupInput) followupInput.focus();
+};
 </script>
-
-<style>
-    .loading-dot {
-        font-size: 48px;
-        color: #8B4513;
-        animation: blink 1.4s infinite both;
-    }
-    .loading-dot:nth-child(1) { animation-delay: 0s; }
-    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
-    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink {
-        0% { opacity: 0.2; }
-        20% { opacity: 1; }
-        100% { opacity: 0.2; }
-    }
-</style>
-
-{% if error %}
-<div class="message message-error">{{ error }}</div>
-{% endif %}
-
-{% if keywords %}
-<div style="color:#999;margin-bottom:15px;font-size:0.9em;">
-    {% if language == "zh" %}🔎 搜索关键词：{% else %}🔎 Keywords:{% endif %}
-    {% for kw in keywords %}
-        <span style="background:#f0ebe6;padding:2px 8px;border-radius:4px;margin:0 3px;">{{ kw }}</span>
-    {% endfor %}
-</div>
-{% endif %}
-
-{% if results %}
-<div class="results">
-    {% for book in results %}
-    <div class="result-card">
-        <h3>📘 {{ book.title }}</h3>
-        <div class="book-meta">
-            <span>✍️ {{ book.author }}</span>
-            {% if book.isbn %}<span>📖 ISBN: {{ book.isbn }}</span>{% endif %}
-        </div>
-        
-        <!-- 图书馆状态 -->
-        <div style="margin:8px 0;">
-            {% if book.library_status == "available" %}
-                <span class="status-tag status-available">
-                    {% if language == "zh" %}✅ 在馆{% else %}✅ Available{% endif %}
-                    {% if book.library_location %}（{{ book.library_location }}）{% endif %}
-                </span>
-            {% elif book.library_status == "borrowed" %}
-                <span class="status-tag status-borrowed">
-                    {% if language == "zh" %}⏳ 已借出，预计 {{ book.library_due_date }} 归还{% else %}⏳ Borrowed, due {{ book.library_due_date }}{% endif %}
-                </span>
-            {% else %}
-                <span class="status-tag status-notfound">
-                    {% if language == "zh" %}📝 未在图书馆找到{% else %}📝 Not found in library{% endif %}
-                </span>
-            {% endif %}
-        </div>
-        
-        <!-- AI推荐理由 -->
-        {% if book.reason %}
-        <div class="ai-reason">
-            <strong>💡 {% if language == "zh" %}AI推荐：{% else %}AI says:{% endif %}</strong>
-            {{ book.reason }}
-        </div>
-        {% endif %}
-        
-        <!-- 详细阅读建议 -->
-        {% if book.detail %}
-        <div class="ai-reason" style="background:#f5f0eb;border-left:3px solid #A0522D;">
-            <strong>📖 {% if language == "zh" %}阅读建议：{% else %}Reading Tips:{% endif %}</strong>
-            {{ book.detail }}
-        </div>
-        {% endif %}
-        
-        <!-- 论坛评论 -->
-        {% if book.forum_posts %}
-        <div class="comment-summary">
-            <strong>💬 {% if language == "zh" %}书友评论：{% else %}Comments:{% endif %}</strong>
-            {% for post in book.forum_posts[:3] %}
-            <div class="comment-item">
-                <a href="/forum/{{ post.post_id }}" style="color:#666;text-decoration:none;">
-                    <span style="color:#8B4513;">{{ post.username }}</span>：
-                    "{{ post.content }}"
-                    👍 {{ post.likes }}
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <!-- 交换信息 -->
-        {% if book.exchange_books %}
-        <div class="comment-summary">
-            <strong>🔄 {% if language == "zh" %}交换信息：{% else %}Exchange:{% endif %}</strong>
-            {% for eb in book.exchange_books %}
-            <div class="comment-item">
-                {% if language == "zh" %}
-                    <span style="color:#1565C0;">{{ eb.owner }}</span> 愿意交换 →
-                    <a href="/exchange/{{ eb.book_id }}/chat" class="btn btn-secondary" style="padding:2px 10px;font-size:0.85em;">
-                        联系TA
-                    </a>
-                {% else %}
-                    <span style="color:#1565C0;">{{ eb.owner }}</span> wants to exchange →
-                    <a href="/exchange/{{ eb.book_id }}/chat" class="btn btn-secondary" style="padding:2px 10px;font-size:0.85em;">
-                        Contact
-                    </a>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
-{% elif results is not none %}
-<p style="text-align:center;color:#999;margin-top:30px;">
-    {% if language == "zh" %}没有找到相关图书，试试换个关键词？{% else %}No results found. Try different keywords?{% endif %}
-</p>
-{% endif %}
-
 {% endblock %}

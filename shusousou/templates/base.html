@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <!-- 导航栏 -->
+    <!-- 导航�?-->
     <nav class="navbar">
         <div class="nav-container">
             <a href="/" class="nav-logo">
@@ -23,8 +23,11 @@
                 <a href="/forum">
                     {% if language == "zh" %}论坛{% else %}Forum{% endif %}
                 </a>
-                <a href="/exchange">
+                                <a href="/exchange">
                     {% if language == "zh" %}交换{% else %}Exchange{% endif %}
+                </a>
+                <a href="/simulation">
+                    {% if language == "zh" %}模拟沙盘{% else %}Simulation{% endif %}
                 </a>
                 {% if current_user %}
                     <a href="/profile">
@@ -36,8 +39,10 @@
                     </a>
                 {% else %}
                     <a href="/auth/login">
-                        {% if language == "zh" %}登录/注册{% else %}Login/Register{% endif %}
+                        {% if language == "zh" %}登录{% else %}Login{% endif %}
                     </a>
+                    <!-- 注册按钮已删�?-->
+
                 {% endif %}
                 <button class="lang-btn" onclick="switchLanguage()">
                     {% if language == "zh" %}EN{% else %}中文{% endif %}
@@ -56,7 +61,7 @@
         <div class="container">
             <p>
                 {% if language == "zh" %}
-                    📚 书搜搜 - 智能校园图书推荐平台
+                    📚 书搜�?- 智能校园图书推荐平台
                 {% else %}
                     📚 BookSearch - Smart Campus Book Platform
                 {% endif %}

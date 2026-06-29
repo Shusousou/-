@@ -1,0 +1,244 @@
+
+"""
+书搜搜 · 图书馆动态流转模拟引擎
+================================
+195 位读者 + 5 位管理员在图书馆中的借书、还书、催还、巡检行为。
+无 Streamlit 依赖，可被 FastAPI 路由直接调用。
+"""
+
+import pandas as pd
+import random
+import os
+import json
+import threading
+import time
+from collections import Counter
+from typing import Optional
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DEFAULT_CSV = os.path.join(BASE_DIR, "database", "processed_library_books.csv")
+
+READER_COUNT = 195
+ADMIN_COUNT = 5
+READER_NAMES = [f"读者_{i}" for i in range(1, READER_COUNT + 1)]
+ADMIN_NAMES = [f"管理员_{i}" for i in range(1, ADMIN_COUNT + 1)]
+ALL_NAMES = READER_NAMES + ADMIN_NAMES
+
+
+class LibrarySimEngine:
+    """无状态模拟引擎"""
+
+    def __init__(self, csv_path=None):
+        self.csv_path = csv_path or DEFAULT_CSV
+        self.reset()
+
+    def reset(self):
+        books = self._load_books()
+        self.book_status = pd.DataFrame({
+            "书名": books["书名"], "分类": books["分类"],
+            "作者": books["作者"], "馆藏位置": books["馆藏位置"],
+            "ISBN": books["ISBN"], "Status": "在馆",
+            "Current_Borrower": None,
+        })
+        self.reader_books = {name: [] for name in READER_NAMES}
+        self.logs = []
+        self.clock = 0.0
+        self.step_count = 0
+        self.running = False
+        self.speed = 0.3
+        self._lock = threading.Lock()
+
+    def _load_books(self):
+        df = pd.read_csv(self.csv_path)
+        df = df.rename(columns={
+            "title_cn": "书名", "category_cn": "分类",
+            "Author": "作者", "Location Name": "馆藏位置", "ISBN": "ISBN",
+        })
+        df["分类"] = df["分类"].apply(
+            lambda x: str(x).split(";")[0].strip() if pd.notna(x) else "未分类"
+        )
+        df["ISBN"] = df["ISBN"].apply(
+            lambda x: str(x).split(";")[0].strip() if pd.notna(x) else ""
+        )
+        df = df.drop_duplicates(subset=["书名"], keep="first").reset_index(drop=True)
+        return df
+
+    def step(self):
+        with self._lock:
+            actor = random.choice(ALL_NAMES)
+            is_admin = actor.startswith("管理员")
+            if is_admin:
+                self._admin_action(actor)
+            else:
+                self._reader_action(actor)
+            self.clock += random.uniform(0.25, 0.75)
+            self.step_count += 1
+            if len(self.logs) > 500:
+                self.logs[:] = self.logs[-500:]
+        return self._build_snapshot()
+
+    def _admin_action(self, actor):
+        borrowed = self.book_status[self.book_status["Status"] == "借出"].index.tolist()
+        if random.random() < 0.4 and borrowed:
+            idx = random.choice(borrowed)
+            row = self.book_status.loc[idx]
+            old_reader = row["Current_Borrower"]
+            self.book_status.at[idx, "Status"] = "在馆"
+            self.book_status.at[idx, "Current_Borrower"] = None
+            if old_reader in self.reader_books and idx in self.reader_books[old_reader]:
+                self.reader_books[old_reader].remove(idx)
+            self.logs.append({
+                "time": self.clock, "actor": actor,
+                "action": "admin_return",
+                "msg": f"催还《{row['书名'][:20]}》by {old_reader}",
+                "book": row["书名"],
+            })
+        else:
+            self.logs.append({
+                "time": self.clock, "actor": actor,
+                "action": "admin_patrol",
+                "msg": "巡检完成，无异常", "book": "",
+            })
+
+    def _reader_action(self, actor):
+        reader = actor
+        current = self.reader_books.get(reader, [])
+        if current and random.random() < 0.5:
+            idx = current.pop(0)
+            row = self.book_status.loc[idx]
+            self.book_status.at[idx, "Status"] = "在馆"
+            self.book_status.at[idx, "Current_Borrower"] = None
+            self.logs.append({
+                "time": self.clock, "actor": reader,
+                "action": "return",
+                "msg": f"归还《{row['书名'][:20]}》",
+                "book": row["书名"],
+            })
+        else:
+            available = self.book_status[self.book_status["Status"] == "在馆"].index.tolist()
+            if available:
+                idx = random.choice(available)
+                row = self.book_status.loc[idx]
+                self.book_status.at[idx, "Status"] = "借出"
+                self.book_status.at[idx, "Current_Borrower"] = reader
+                self.reader_books[reader].append(idx)
+                self.logs.append({
+                    "time": self.clock, "actor": reader,
+                    "action": "borrow",
+                    "msg": f"借出《{row['书名'][:20]}》",
+                    "book": row["书名"],
+                })
+            else:
+                self.logs.append({
+                    "time": self.clock, "actor": reader,
+                    "action": "idle",
+                    "msg": "无书可借，下次再来", "book": "",
+                })
+
+    def _build_snapshot(self):
+        bs = self.book_status
+        total = len(bs)
+        borrowed_count = len(bs[bs["Status"] == "借出"])
+        available_count = total - borrowed_count
+
+        def _safe(v):
+            if isinstance(v, float) and (v != v or v in (float("inf"), float("-inf"))):
+                return ""
+            return "" if pd.isna(v) else v
+
+        books_list = []
+        for _, row in bs.iterrows():
+            books_list.append({
+                "书名": _safe(row["书名"]), "分类": _safe(row["分类"]),
+                "作者": _safe(row["作者"]), "馆藏位置": _safe(row["馆藏位置"]),
+                "in": row["Status"] == "在馆",
+                "borrower": _safe(row["Current_Borrower"]),
+            })
+
+        cat_stats = bs.groupby("分类").agg(
+            总数=("Status", "count"),
+            借出=("Status", lambda x: (x == "借出").sum()),
+        ).reset_index()
+        cat_stats["在馆"] = cat_stats["总数"] - cat_stats["借出"]
+        cat_stats["借出率"] = (cat_stats["借出"] / cat_stats["总数"] * 100).round(1)
+        cat_stats = cat_stats.sort_values("总数", ascending=False).head(15)
+        cat_stats = cat_stats.fillna(0)
+
+        borrow_logs = [e for e in self.logs if e["action"] == "borrow"]
+        book_counter = Counter(e["book"] for e in borrow_logs)
+        top_books = []
+        for bk, cnt in book_counter.most_common(10):
+            match = bs[bs["书名"] == bk]
+            if not match.empty:
+                row = match.iloc[0]
+                top_books.append({
+                    "书名": bk, "借阅次数": cnt,
+                    "分类": row["分类"] if pd.notna(row["分类"]) else "",
+                    "作者": row["作者"] if pd.notna(row["作者"]) else "",
+                })
+
+        sim_hours = self.clock
+        sim_days = int(sim_hours // 24)
+        sim_hrs = int(sim_hours % 24)
+
+        return {
+            "total_books": total, "borrowed_count": borrowed_count,
+            "available_count": available_count,
+            "borrow_rate": round(borrowed_count / total * 100, 1) if total else 0,
+            "sim_days": sim_days, "sim_hours": sim_hrs,
+            "step_count": self.step_count,
+            "active_readers": sum(1 for v in self.reader_books.values() if v),
+            "books": books_list, "logs": self.logs[-80:],
+            "category_stats": cat_stats.to_dict(orient="records"),
+            "top_books": top_books,
+            "running": self.running, "speed": self.speed,
+        }
+
+    def get_snapshot(self):
+        with self._lock:
+            return self._build_snapshot()
+
+
+_engine = None
+
+
+def get_engine():
+    global _engine
+    if _engine is None:
+        _engine = LibrarySimEngine()
+    return _engine
+
+
+def reset_engine():
+    global _engine
+    _stop_background()
+    _engine = LibrarySimEngine()
+
+
+_background_thread = None
+_stop_event = threading.Event()
+
+
+def _background_worker():
+    engine = get_engine()
+    while not _stop_event.is_set():
+        if engine.running:
+            engine.step()
+            time.sleep(engine.speed)
+        else:
+            _stop_event.wait(0.2)
+
+
+def _start_background():
+    global _background_thread, _stop_event
+    if _background_thread and _background_thread.is_alive():
+        return
+    _stop_event.clear()
+    _background_thread = threading.Thread(target=_background_worker, daemon=True)
+    _background_thread.start()
+
+
+def _stop_background():
+    global _stop_event
+    _stop_event.set()

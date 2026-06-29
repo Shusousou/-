@@ -14,12 +14,20 @@
                    placeholder="{% if language == "zh" %}例如：机器学习{% else %}e.g. Machine Learning{% endif %}">
         </div>
         
-        <div class="form-group">
+                <div class="form-group">
             <label for="author">
                 {% if language == "zh" %}✍️ 作者{% else %}✍️ Author{% endif %}
             </label>
             <input type="text" id="author" name="author"
                    placeholder="{% if language == "zh" %}可选{% else %}Optional{% endif %}">
+        </div>
+        
+        <div class="form-group">
+            <label for="isbn">
+                {% if language == "zh" %}🔖 ISBN（推荐填写，用于热搜统计）{% else %}🔖 ISBN (for trending){% endif %}
+            </label>
+            <input type="text" id="isbn" name="isbn"
+                   placeholder="{% if language == "zh" %}例如：9781594480003{% else %}e.g. 9781594480003{% endif %}">
         </div>
         
         <div class="form-group">

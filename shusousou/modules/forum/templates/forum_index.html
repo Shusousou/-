@@ -11,74 +11,104 @@
     </div>
 </div>
 
-<!-- 分类和搜索 -->
-<div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
-    <div style="display:flex;gap:5px;flex-wrap:wrap;">
-        <a href="/forum/" class="btn btn-secondary" style="padding:5px 12px;font-size:0.9em;
-            {% if not current_category %}background:#8B4513;color:#fff;{% endif %}">
-            {% if language == "zh" %}全部{% else %}All{% endif %}
-        </a>
-        {% for cat in categories %}
-        <a href="/forum/?category={{ cat }}" class="btn btn-secondary" style="padding:5px 12px;font-size:0.9em;
-            {% if current_category == cat %}background:#8B4513;color:#fff;{% endif %}">
-            {{ cat }}
-        </a>
-        {% endfor %}
-    </div>
-    <form method="get" action="/forum/" style="display:flex;gap:5px;margin-left:auto;">
-        <input type="text" name="q" class="search-input" style="width:200px;padding:5px 10px;"
-               placeholder="{% if language == "zh" %}搜索帖子...{% else %}Search posts...{% endif %}"
-               value="{{ search_q }}">
-        <button type="submit" class="search-btn" style="padding:5px 15px;">
-            {% if language == "zh" %}搜索{% else %}Search{% endif %}
-        </button>
-    </form>
-</div>
-
-<!-- 帖子列表 -->
-{% if posts %}
-<div class="forum-list">
-    {% for post in posts %}
-    <div class="forum-post-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-            <div>
-                <a href="/forum/{{ post.id }}" style="text-decoration:none;">
-                    <h3 style="margin:0 0 5px;color:#8B4513;">📖 {{ post.book_name }}</h3>
+<div class="forum-layout">
+    <div class="forum-main-column">
+        <div class="forum-toolbar">
+            <div class="forum-category-group">
+                <a href="/forum/" class="btn btn-secondary forum-pill-btn {% if not current_category %}active{% endif %}">
+                    {% if language == "zh" %}全部{% else %}All{% endif %}
                 </a>
-                {% if post.author %}<span style="color:#666;font-size:0.9em;">✍️ {{ post.author }}</span>{% endif %}
-                {% if post.category %}<span class="category-tag">{{ post.category }}</span>{% endif %}
+                {% for cat in categories %}
+                <a href="/forum/?category={{ cat }}" class="btn btn-secondary forum-pill-btn {% if current_category == cat %}active{% endif %}">
+                    {{ cat }}
+                </a>
+                {% endfor %}
             </div>
-            <div style="text-align:right;font-size:0.85em;color:#999;">
-                <div>👤 {{ post.username }}</div>
-                <div>{{ post.created_at }}</div>
-            </div>
+            <form method="get" action="/forum/" class="forum-search-form">
+                <input type="text" name="q" class="search-input"
+                       placeholder="{% if language == "zh" %}搜书名、作者或书评...{% else %}Search book, author or review...{% endif %}"
+                       value="{{ search_q }}">
+                <button type="submit" class="search-btn">
+                    {% if language == "zh" %}搜索{% else %}Search{% endif %}
+                </button>
+            </form>
         </div>
-        
-        <p style="margin:10px 0;color:#444;">{{ post.content }}</p>
-        
-        <div style="display:flex;gap:15px;font-size:0.85em;color:#999;align-items:center;">
-            {% if post.library %}
-                {% if post.library.status == "available" %}
-                    <span style="color:#2e7d32;">✅ {% if language == "zh" %}在馆{% else %}Available{% endif %}</span>
-                {% elif post.library.status == "borrowed" %}
-                    <span style="color:#e65100;">⏳ {% if language == "zh" %}已借出{% else %}Borrowed{% endif %}</span>
-                {% endif %}
+
+        <div class="forum-results-summary">
+            <span>{% if search_q %}{% if language == "zh" %}正在搜索“{{ search_q }}”{% else %}Showing results for “{{ search_q }}”{% endif %}{% else %}{% if language == "zh" %}全部书评帖子{% else %}All review posts{% endif %}{% endif %}</span>
+            <span>{{ posts|length }} {% if language == "zh" %}篇{% else %}posts{% endif %}</span>
+        </div>
+
+        {% if posts %}
+        <div class="forum-list">
+            {% for post in posts %}
+            <article class="forum-post-card">
+                <div class="forum-post-head">
+                    <div>
+                        <a href="/forum/{{ post.id }}" class="forum-post-title-link">
+                            <h3>📖 {{ post.book_name }}</h3>
+                        </a>
+                        <div class="forum-post-meta-row">
+                            {% if post.author %}<span class="forum-post-meta">✍️ {{ post.author }}</span>{% endif %}
+                            {% if post.category %}<span class="category-tag">{{ post.category }}</span>{% endif %}
+                            <span class="review-badge">📌 {% if language == "zh" %}书评帖子{% else %}Review thread{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="forum-post-info">
+                        <div>👤 {{ post.username }}</div>
+                        <div>{{ post.created_at }}</div>
+                    </div>
+                </div>
+
+                <p class="forum-post-content">{{ post.content }}</p>
+
+                <div class="forum-post-footer">
+                    <div class="forum-post-stats">
+                        {% if post.library %}
+                            {% if post.library.status == "available" %}
+                                <span class="status-pill status-available">✅ {% if language == "zh" %}在馆{% else %}Available{% endif %}</span>
+                            {% elif post.library.status == "borrowed" %}
+                                <span class="status-pill status-borrowed">⏳ {% if language == "zh" %}已借出{% else %}Borrowed{% endif %}</span>
+                            {% endif %}
+                        {% endif %}
+                        <span>💬 {{ post.comment_count }}</span>
+                        {% if post.review_type == "celebrity" %}<span class="celebrity-pill">🌟 {% if language == "zh" %}名人{% else %}Celebrity{% endif %}</span>{% endif %}
+                    </div>
+                    <div class="forum-action-group">
+                        <button type="button" class="forum-action-btn{% if post.liked %} active{% endif %}" data-post-id="{{ post.id }}" data-action="like">
+                            <span class="action-icon">{% if post.liked %}❤️{% else %}🤍{% endif %}</span>
+                            <span class="count">{{ post.likes_count }}</span>
+                        </button>
+                        <button type="button" class="forum-action-btn{% if post.starred %} active{% endif %}" data-post-id="{{ post.id }}" data-action="star">
+                            <span class="action-icon">{% if post.starred %}⭐{% else %}☆{% endif %}</span>
+                            <span class="count">{{ post.stars_count }}</span>
+                        </button>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="forum-empty-state">
+            {% if language == "zh" %}
+                <p>暂无匹配的书评帖子，换个关键词再试试。</p>
+            {% else %}
+                <p>No matching review posts yet. Try another keyword.</p>
             {% endif %}
-            <span>💬 {{ post.comment_count }}</span>
-            <span>👍 {{ post.like_count }}</span>
+            <a href="/forum/new" class="btn btn-primary">✏️ {% if language == "zh" %}发帖{% else %}New post{% endif %}</a>
         </div>
+        {% endif %}
     </div>
-    {% endfor %}
+
+    <aside class="forum-side-panel">
+        <div class="trending-card">
+            <div class="trending-title">🔥 {% if language == "zh" %}书评热榜{% else %}Trending reviews{% endif %}</div>
+            <p class="trending-subtitle">{% if language == "zh" %}根据书评数量排行，像微博热搜一样看热门书。{% else %}Ranked by review volume, like a social media hot list.{% endif %}</p>
+            <div id="trending-list" class="trending-list">
+                <div class="trending-loading">{% if language == "zh" %}正在加载热榜...{% else %}Loading trending list...{% endif %}</div>
+            </div>
+        </div>
+    </aside>
 </div>
-{% else %}
-<div style="text-align:center;padding:40px;color:#999;">
-    {% if language == "zh" %}
-        <p>暂无帖子，来发表第一篇吧！</p>
-    {% else %}
-        <p>No posts yet. Be the first to share!</p>
-    {% endif %}
-    <a href="/forum/new" class="btn btn-primary" style="margin-top:15px;">✏️ 发帖</a>
-</div>
-{% endif %}
 
 {% endblock %}

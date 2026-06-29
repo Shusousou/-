@@ -14,6 +14,14 @@
             <span>{{ post.created_at }}</span>
         </div>
         
+        <!-- 书评类型标识 -->
+        {% if post.review_type == "celebrity" %}
+        <div style="background:linear-gradient(135deg,#FFD700,#FFA500);padding:8px 15px;border-radius:8px;margin-bottom:15px;font-size:0.9em;color:#333;display:flex;align-items:center;gap:8px;">
+            <span>🌟</span>
+            <span>{% if language == "zh" %}🌟 名人书评 · 大咖推荐{% else %}Celebrity Review{% endif %}</span>
+        </div>
+        {% endif %}
+
         <!-- 馆藏状态 -->
         {% if library %}
         <div style="background:#f5f0eb;padding:10px 15px;border-radius:8px;margin-bottom:15px;font-size:0.9em;">
@@ -25,22 +33,28 @@
             {% endif %}
         </div>
         {% endif %}
-        
+
         <!-- 内容 -->
         <div style="line-height:1.8;color:#333;white-space:pre-wrap;">{{ post.content }}</div>
         
-        <!-- 点赞 -->
-        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;">
+        <!-- 点赞 + 收藏 -->
+        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;display:flex;gap:12px;align-items:center;">
             <form method="post" action="/forum/{{ post.id }}/like" style="display:inline;">
                 <button type="submit" class="btn {% if liked %}btn-primary{% else %}btn-secondary{% endif %}" 
-                        style="padding:5px 15px;">
-                    {% if liked %}
-                        ❤️ {{ like_count }}
-                    {% else %}
-                        🤍 {{ like_count }}
-                    {% endif %}
+                        style="padding:5px 15px;cursor:pointer;">
+                    {% if liked %}❤️{% else %}🤍{% endif %} {{ post.likes_count }}
                 </button>
             </form>
+            <form method="post" action="/forum/{{ post.id }}/star" style="display:inline;">
+                <button type="submit" class="btn {% if starred %}btn-primary{% else %}btn-secondary{% endif %}" 
+                        style="padding:5px 15px;cursor:pointer;">
+                    {% if starred %}⭐{% else %}☆{% endif %} {{ post.stars_count and post.stars_count or 0 }}
+                </button>
+            </form>
+            <span style="font-size:0.85em;color:#999;margin-left:auto;">
+                {% if post.review_type == "celebrity" %}🌟{% else %}👤{% endif %}
+                {{ post.review_type == "celebrity" and "名人" or "用户" }}{% if language == "en" %}{{ post.review_type == "celebrity" and "Celebrity" or "User" }}{% endif %}书评
+            </span>
         </div>
     </div>
     

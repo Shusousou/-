@@ -1,6 +1,6 @@
-﻿"""
-书搜搜 - 用户认证模块
-负责：注册、登录、退出、邮箱验证
+"""
+书搜�?- 用户认证模块
+负责：注册、登录、退出、邮箱验�?
 """
 
 from fastapi import APIRouter, Request, Form
@@ -35,37 +35,20 @@ from datetime import datetime
 
 
 # ============================================
-# 登录/注册合并页面
+# 登录页面
 # ============================================
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    """显示登录/注册页面"""
+    """显示登录页面"""
     lang = request.cookies.get("language", "zh")
     current_user = get_current_user(request)
-    return templates.TemplateResponse(request, "login_register.html", {
+    return templates.TemplateResponse(request, "login.html", {
         "language": lang,
         "current_user": current_user,
         "login_error": None,
-        "register_error": None,
-        "register_success": None,
         "login_success": None,
-        "mode": "login"
-    })
+        "register_success": None
 
-
-@router.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
-    """显示注册页面"""
-    lang = request.cookies.get("language", "zh")
-    current_user = get_current_user(request)
-    return templates.TemplateResponse(request, "login_register.html", {
-        "language": lang,
-        "current_user": current_user,
-        "login_error": None,
-        "register_error": None,
-        "register_success": None,
-        "login_success": None,
-        "mode": "register"
     })
 
 
@@ -84,35 +67,57 @@ async def login(
         
         if not user:
             msg = "该邮箱未注册" if lang == "zh" else "Email not registered"
-            return templates.TemplateResponse(request, "login_register.html", {
-                "language": lang, "current_user": current_user,
-                "login_error": msg, "register_error": None,
-                "register_success": None, "login_success": None,
-                "mode": "login"
+            return templates.TemplateResponse(request, "login.html", {
+                "language": lang, 
+                "current_user": current_user,
+                "login_error": msg, 
+                "login_success": None,
+                "register_success": None
+
             })
         
         if user.password_hash != hash_password(password):
             msg = "密码错误" if lang == "zh" else "Incorrect password"
-            return templates.TemplateResponse(request, "login_register.html", {
-                "language": lang, "current_user": current_user,
-                "login_error": msg, "register_error": None,
-                "register_success": None, "login_success": None,
-                "mode": "login"
+            return templates.TemplateResponse(request, "login.html", {
+                "language": lang, 
+                "current_user": current_user,
+                "login_error": msg, 
+                "login_success": None,
+                "register_success": None
+
             })
         
         if not user.is_verified:
-            msg = "请先验证邮箱再登录" if lang == "zh" else "Please verify your email first"
-            return templates.TemplateResponse(request, "login_register.html", {
-                "language": lang, "current_user": current_user,
-                "login_error": msg, "register_error": None,
-                "register_success": None, "login_success": None,
-                "mode": "login"
+            msg = "请先验证邮箱再登�? if lang == "zh" else "Please verify your email first"
+            return templates.TemplateResponse(request, "login.html", {
+                "language": lang, 
+                "current_user": current_user,
+                "login_error": msg, 
+                "login_success": None,
+                "register_success": None
+
             })
     
     # 登录成功
     response = RedirectResponse(url="/", status_code=303)
     response.set_cookie(key="user_id", value=str(user.id))
     return response
+
+
+# ============================================
+# 注册页面
+# ============================================
+@router.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    """显示注册页面"""
+    lang = request.cookies.get("language", "zh")
+    current_user = get_current_user(request)
+    return templates.TemplateResponse(request, "register.html", {
+        "language": lang,
+        "current_user": current_user,
+        "register_error": None,
+        "register_success": None
+    })
 
 
 @router.post("/register", response_class=HTMLResponse)
@@ -129,12 +134,13 @@ async def register(
     current_user = get_current_user(request)
     
     if len(password) < 6:
-        msg = "密码太短，至少6位" if lang == "zh" else "Password too short"
-        return templates.TemplateResponse(request, "login_register.html", {
-            "language": lang, "current_user": current_user,
-            "login_error": None, "register_error": msg,
-            "register_success": None, "login_success": None,
-        "mode": "login"
+        msg = "密码太短，至�?�? if lang == "zh" else "Password too short"
+        return templates.TemplateResponse(request, "register.html", {
+            "language": lang, 
+            "current_user": current_user,
+            "register_error": msg, 
+            "register_success": None
+
         })
     
     with get_db() as session:
@@ -143,18 +149,19 @@ async def register(
         ).first()
         if existing and existing.password_hash:
             msg = "用户名或邮箱已被注册" if lang == "zh" else "Username or email already exists"
-            return templates.TemplateResponse(request, "login_register.html", {
-                "language": lang, "current_user": current_user,
-                "login_error": None, "register_error": msg,
-                "register_success": None, "login_success": None,
-                "mode": "register"
+            return templates.TemplateResponse(request, "register.html", {
+                "language": lang, 
+                "current_user": current_user,
+                "register_error": msg, 
+                "register_success": None
+
             })
         
         # 查找临时用户（通过send-code-ajax创建的）
         temp_user = session.query(User).filter(User.email == email).first()
         if not temp_user:
             msg = "请先发送验证码" if lang == "zh" else "Please send verification code first"
-            return templates.TemplateResponse(request, "login_register.html", {
+            return templates.TemplateResponse(request, "register.html", {
                 "language": lang, "current_user": current_user,
                 "login_error": None, "register_error": msg,
                 "register_success": None, "login_success": None,
@@ -164,7 +171,7 @@ async def register(
         # 检查验证码是否过期
         if temp_user.verify_code_expire and datetime.now() > temp_user.verify_code_expire:
             msg = "验证码已过期，请重新获取" if lang == "zh" else "Verification code expired"
-            return templates.TemplateResponse(request, "login_register.html", {
+            return templates.TemplateResponse(request, "register.html", {
                 "language": lang, "current_user": current_user,
                 "login_error": None, "register_error": msg,
                 "register_success": None, "login_success": None,
@@ -173,15 +180,15 @@ async def register(
         
         # 检查验证码
         if temp_user.verify_code != verify_code:
-            msg = "验证码错误" if lang == "zh" else "Incorrect verification code"
-            return templates.TemplateResponse(request, "login_register.html", {
+            msg = "验证码错�? if lang == "zh" else "Incorrect verification code"
+            return templates.TemplateResponse(request, "register.html", {
                 "language": lang, "current_user": current_user,
                 "login_error": None, "register_error": msg,
                 "register_success": None, "login_success": None,
                 "mode": "register"
             })
         
-        # 更新临时用户为真实用户
+        # 更新临时用户为真实用�?
         temp_user.username = username
         temp_user.password_hash = hash_password(password)
         temp_user.contact = contact
@@ -191,12 +198,32 @@ async def register(
         temp_user.verify_code_expire = None
         session.commit()
     
-    msg = "注册成功！请登录" if lang == "zh" else "Registration successful! Please login"
-    return templates.TemplateResponse(request, "login_register.html", {
-        "language": lang, "current_user": current_user,
-        "login_error": None, "register_error": None,
-        "register_success": msg, "login_success": None,
-        "mode": "register"
+    # 发送验证邮件（开发模式：打印到控制台�?
+    verify_link = f"http://localhost:8000/auth/verify?token={verify_token}"
+    from ...mailer import send_verification_email
+    send_verification_email(email, username, verify_link)
+    
+    msg = f"注册成功！验证邮件已发送到 {email}，请检查收件箱（包括垃圾邮件）" if lang == "zh" else f"Registered! Verification sent to {email}. Check your inbox (including spam)."
+    return templates.TemplateResponse(request, "register.html", {
+        "language": lang, 
+        "current_user": current_user,
+        "register_error": None, 
+        "register_success": msg
+    })
+
+
+# ============================================
+# 忘记密码页面
+# ============================================
+@router.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password(request: Request):
+    """显示忘记密码页面"""
+    lang = request.cookies.get("language", "zh")
+    current_user = get_current_user(request)
+    return templates.TemplateResponse(request, "forgot_password.html", {
+        "language": lang,
+        "current_user": current_user
+
     })
 
 
@@ -210,23 +237,27 @@ async def verify_email(request: Request, token: str = ""):
     current_user = get_current_user(request)
     
     if not token:
-        msg = "无效的验证链接" if lang == "zh" else "Invalid verification link"
-        return templates.TemplateResponse(request, "login_register.html", {
-            "language": lang, "current_user": current_user,
-            "login_error": msg, "register_error": None,
-            "register_success": None, "login_success": None,
-        "mode": "login"
+        msg = "无效的验证链�? if lang == "zh" else "Invalid verification link"
+        return templates.TemplateResponse(request, "login.html", {
+            "language": lang, 
+            "current_user": current_user,
+            "login_error": msg, 
+            "login_success": None,
+            "register_success": None
+
         })
     
     with get_db() as session:
         user = session.query(User).filter(User.verify_token == token).first()
         if not user:
-            msg = "验证链接已失效，请重新注册" if lang == "zh" else "Invalid or expired verification link"
-            return templates.TemplateResponse(request, "login_register.html", {
-                "language": lang, "current_user": current_user,
-                "login_error": msg, "register_error": None,
-                "register_success": None, "login_success": None,
-                "mode": "login"
+            msg = "验证链接已失效，请重新注�? if lang == "zh" else "Invalid or expired verification link"
+            return templates.TemplateResponse(request, "login.html", {
+                "language": lang, 
+                "current_user": current_user,
+                "login_error": msg, 
+                "login_success": None,
+                "register_success": None
+
             })
         
         user.is_verified = True
@@ -234,16 +265,18 @@ async def verify_email(request: Request, token: str = ""):
         session.commit()
     
     msg = "邮箱验证成功！请登录" if lang == "zh" else "Email verified! Please login"
-    return templates.TemplateResponse(request, "login_register.html", {
-        "language": lang, "current_user": current_user,
-        "login_error": None, "register_error": None,
-        "register_success": msg, "login_success": None,
-        "mode": "register"
+    return templates.TemplateResponse(request, "login.html", {
+        "language": lang, 
+        "current_user": current_user,
+        "login_error": None, 
+        "login_success": None,
+        "register_success": msg
+
     })
 
 
 # ============================================
-# 退出
+# 退�?
 # ============================================
 @router.get("/logout")
 async def logout():
@@ -253,7 +286,7 @@ async def logout():
 
 
 # ============================================
-# 发送验证码（Ajax，不刷新页面）
+# 发送验证码（Ajax，不刷新页面�?
 # ============================================
 from fastapi.responses import JSONResponse
 import random
@@ -288,16 +321,16 @@ async def send_verify_code_ajax(request: Request, email: str = Form(...)):
         session.commit()
     
     from ...mailer import send_email
-    subject = "书搜搜 - 注册验证码 / Registration Code"
+    subject = "书搜�?- 注册验证�?/ Registration Code"
     body = f"""
     <div>
-        <h2>书搜搜 BookSearch</h2>
-        <p>你的注册验证码是：</p>
+        <h2>书搜�?BookSearch</h2>
+        <p>你的注册验证码是�?/p>
         <p style="font-size:36px;font-weight:bold;letter-spacing:8px;">{code}</p>
-        <p>验证码有效期为5分钟。</p>
+        <p>验证码有效期�?分钟�?/p>
     </div>
     """
     send_email(email, subject, body)
     
-    return JSONResponse({"success": True, "message": "验证码已发送"})
+    return JSONResponse({"success": True, "message": "验证码已发�?})
 

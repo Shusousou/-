@@ -23,6 +23,6 @@ def init_database():
 
 # 导入所有模型（确保它们在 Base.metadata 中注册）
 from .user import User
-from .forum import Post, Comment, Like
+from .forum import Post, Comment, Like, Star, CelebrityReview
 from .exchange import ExchangeBook, ExchangeRequest, RequestMatch, ExchangeMessage
 
