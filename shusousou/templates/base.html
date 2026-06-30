@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <!-- 导航�?-->
+    <!-- 导航栏 -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="/" class="nav-logo">
@@ -23,7 +23,7 @@
                 <a href="/forum">
                     {% if language == "zh" %}论坛{% else %}Forum{% endif %}
                 </a>
-                                <a href="/exchange">
+                <a href="/exchange">
                     {% if language == "zh" %}交换{% else %}Exchange{% endif %}
                 </a>
                 <a href="/simulation">
@@ -41,8 +41,7 @@
                     <a href="/auth/login">
                         {% if language == "zh" %}登录{% else %}Login{% endif %}
                     </a>
-                    <!-- 注册按钮已删�?-->
-
+                    <!-- 注册按钮已删除 -->
                 {% endif %}
                 <button class="lang-btn" onclick="switchLanguage()">
                     {% if language == "zh" %}EN{% else %}中文{% endif %}
@@ -61,7 +60,7 @@
         <div class="container">
             <p>
                 {% if language == "zh" %}
-                    📚 书搜�?- 智能校园图书推荐平台
+                    📚 书搜搜 - 智能校园图书推荐平台
                 {% else %}
                     📚 BookSearch - Smart Campus Book Platform
                 {% endif %}
@@ -71,15 +70,11 @@
 
     <script src="/static/js/main.js"></script>
     <script>
-        // 语言切换函数
+        // 语言切换函数，直接调用后端设置 Cookie 并重定向
         function switchLanguage() {
             let currentLang = "{{ language }}";
             let targetLang = currentLang === "zh" ? "en" : "zh";
-            
-            // 获取当前URL
-            let url = new URL(window.location.href);
-            url.searchParams.set("lang", targetLang);
-            window.location.href = url.toString();
+            window.location.href = "/set-language?lang=" + targetLang;
         }
     </script>
 </body>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}🎮 模拟沙盘 - 书搜搜{% endblock %}
+{% block title %}{% if language == "zh" %}🎮 模拟沙盘 - 书搜搜{% else %}🎮 Sandbox - BookSearch{% endif %}{% endblock %}
 
 {% block content %}
 <style>
@@ -101,71 +101,80 @@
 </style>
 
 <div class="sim-container">
-  <h1 style="margin-bottom:4px;">🎮 书搜搜 · 图书馆动态流转沙盘</h1>
+  <h1 style="margin-bottom:4px;">
+    {% if language == "zh" %}🎮 书搜搜 · 图书馆动态流转沙盘{% else %}🎮 BookSearch · Library Dynamic Flow Sandbox{% endif %}
+  </h1>
   <p style="color:var(--text-secondary); margin-top:0; font-size:0.9rem;">
-    模拟 195 位读者 + 5 位管理员在图书馆中的借书、还书、催还、巡检行为
+    {% if language == "zh" %}模拟 195 位读者 + 5 位管理员在图书馆中的借书、还书、催还、巡检行为{% else %}Simulating 195 readers + 5 admins' borrowing, returning, recalling, and inspecting behaviors{% endif %}
   </p>
 
   <!-- ── KPI 卡片 ── -->
   <div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card">
-      <div class="kpi-label">🕐 模拟时间</div>
+      <div class="kpi-label">🕐 {% if language == "zh" %}模拟时间{% else %}Simulation Time{% endif %}</div>
       <div class="kpi-value" id="kpiTime">{{ snapshot.sim_days }}d {{ snapshot.sim_hours }}h</div>
-      <div class="kpi-sub">累计运行</div>
+      <div class="kpi-sub">{% if language == "zh" %}累计运行{% else %}Total Run Time{% endif %}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">📚 馆藏总数</div>
+      <div class="kpi-label">📚 {% if language == "zh" %}馆藏总数{% else %}Total Collection{% endif %}</div>
       <div class="kpi-value">{{ snapshot.total_books }}</div>
-      <div class="kpi-sub">册图书</div>
+      <div class="kpi-sub">{% if language == "zh" %}册图书{% else %}books{% endif %}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">📤 当前借出</div>
+      <div class="kpi-label">📤 {% if language == "zh" %}当前借出{% else %}Currently Borrowed{% endif %}</div>
       <div class="kpi-value" id="kpiBorrowed" style="color:{% if snapshot.borrowed_count > snapshot.total_books // 2 %}#e65100{% else %}#333{% endif %}">
         {{ snapshot.borrowed_count }}
       </div>
-      <div class="kpi-sub">占 {{ snapshot.borrow_rate }}%</div>
+      <div class="kpi-sub">{% if language == "zh" %}占{% else %}Ratio{% endif %} {{ snapshot.borrow_rate }}%</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">✅ 在馆空闲</div>
+      <div class="kpi-label">✅ {% if language == "zh" %}在馆空闲{% else %}Available in Library{% endif %}</div>
       <div class="kpi-value" style="color:#2e7d32;">{{ snapshot.available_count }}</div>
-      <div class="kpi-sub">占 {{ 100 - snapshot.borrow_rate }}%</div>
+      <div class="kpi-sub">{% if language == "zh" %}占{% else %}Ratio{% endif %} {{ 100 - snapshot.borrow_rate }}%</div>
     </div>
   </div>
 
   <!-- ── 控制栏 ── -->
   <div class="control-bar">
-    <button id="btnToggle" class="primary" onclick="toggleSim()">▶️ 运行</button>
-    <button onclick="stepSim()">👣 单步执行</button>
-    <button class="danger" onclick="resetSim()">🔄 重置</button>
+    <button id="btnToggle" class="primary" onclick="toggleSim()">
+      {% if language == "zh" %}▶️ 运行{% else %}▶️ Run{% endif %}
+    </button>
+    <button onclick="stepSim()">👣 {% if language == "zh" %}单步执行{% else %}Step{% endif %}</button>
+    <button class="danger" onclick="resetSim()">🔄 {% if language == "zh" %}重置{% else %}Reset{% endif %}</button>
     <span style="flex:1;"></span>
-    <label>速度 (秒/步)</label>
+    <label>{% if language == "zh" %}速度 (秒/步){% else %}Speed (s/step){% endif %}</label>
     <input type="range" id="speedSlider" min="0.05" max="2" step="0.05" value="0.3">
     <span id="speedLabel" style="min-width:40px;">0.3s</span>
     <span style="margin-left:8px; color:var(--text-secondary);">
-      步数: <span id="stepCount">{{ snapshot.step_count }}</span>
+      {% if language == "zh" %}步数{% else %}Steps{% endif %}: <span id="stepCount">{{ snapshot.step_count }}</span>
     </span>
   </div>
 
   <!-- ── 主体双栏 ── -->
   <div class="sim-main">
     <div class="book-table-wrap">
-      <h3 style="margin:0 0 8px; font-size:1rem;">📋 图书库存动态</h3>
-      <input type="text" id="searchInput" placeholder="输入书名或分类过滤..." oninput="filterTable()">
+      <h3 style="margin:0 0 8px; font-size:1rem;">📋 {% if language == "zh" %}图书库存动态{% else %}Book Inventory Status{% endif %}</h3>
+      <input type="text" id="searchInput" placeholder="{% if language == "zh" %}输入书名或分类过滤...{% else %}Search by title or category...{% endif %}" oninput="filterTable()">
       <div class="book-scroll">
         <table class="book-table" id="bookTable">
           <thead><tr>
-            <th>书名</th><th>分类</th><th>作者</th><th>馆藏位置</th><th>状态</th><th>借阅人</th>
+            <th>{% if language == "zh" %}书名{% else %}Title{% endif %}</th>
+            <th>{% if language == "zh" %}分类{% else %}Category{% endif %}</th>
+            <th>{% if language == "zh" %}作者{% else %}Author{% endif %}</th>
+            <th>{% if language == "zh" %}馆藏位置{% else %}Location{% endif %}</th>
+            <th>{% if language == "zh" %}状态{% else %}Status{% endif %}</th>
+            <th>{% if language == "zh" %}借阅人{% else %}Borrower{% endif %}</th>
           </tr></thead>
           <tbody id="bookTableBody"></tbody>
         </table>
       </div>
       <div style="font-size:0.75rem; color:#aaa; margin-top:6px;">
-        显示 <span id="showCount">0</span> / <span id="totalCount">{{ snapshot.total_books }}</span> 条记录
+        {% if language == "zh" %}显示{% else %}Showing{% endif %} <span id="showCount">0</span> / <span id="totalCount">{{ snapshot.total_books }}</span> {% if language == "zh" %}条记录{% else %}records{% endif %}
       </div>
     </div>
 
     <div class="log-panel">
-      <h3 style="margin:0 0 8px; font-size:1rem;">📜 实时借还日志</h3>
+      <h3 style="margin:0 0 8px; font-size:1rem;">📜 {% if language == "zh" %}实时借还日志{% else %}Real-time Log{% endif %}</h3>
       <div class="log-container" id="logContainer"></div>
     </div>
   </div>
@@ -173,19 +182,30 @@
   <!-- ── 底部面板 ── -->
   <div class="sim-bottom">
     <div class="panel">
-      <h3>🏷️ 分类借出分布</h3>
+      <h3>🏷️ {% if language == "zh" %}分类借出分布{% else %}Category Borrowing Distribution{% endif %}</h3>
       <div style="max-height:320px; overflow-y:auto;">
         <table>
-          <thead><tr><th>分类</th><th>总数</th><th>借出</th><th>在馆</th><th>借出率</th></tr></thead>
+          <thead><tr>
+            <th>{% if language == "zh" %}分类{% else %}Category{% endif %}</th>
+            <th>{% if language == "zh" %}总数{% else %}Total{% endif %}</th>
+            <th>{% if language == "zh" %}借出{% else %}Borrowed{% endif %}</th>
+            <th>{% if language == "zh" %}在馆{% else %}In Library{% endif %}</th>
+            <th>{% if language == "zh" %}借出率{% else %}Borrow Rate{% endif %}</th>
+          </tr></thead>
           <tbody id="catStatsBody"></tbody>
         </table>
       </div>
     </div>
     <div class="panel">
-      <h3>🏆 热门借阅 Top 10</h3>
+      <h3>🏆 {% if language == "zh" %}热门借阅 Top 10{% else %}Top 10 Borrowed Books{% endif %}</h3>
       <div style="max-height:320px; overflow-y:auto;">
         <table>
-          <thead><tr><th>书名</th><th>分类</th><th>作者</th><th>借阅次数</th></tr></thead>
+          <thead><tr>
+            <th>{% if language == "zh" %}书名{% else %}Title{% endif %}</th>
+            <th>{% if language == "zh" %}分类{% else %}Category{% endif %}</th>
+            <th>{% if language == "zh" %}作者{% else %}Author{% endif %}</th>
+            <th>{% if language == "zh" %}借阅次数{% else %}Borrow Count{% endif %}</th>
+          </tr></thead>
           <tbody id="topBooksBody"></tbody>
         </table>
       </div>
@@ -194,7 +214,7 @@
 
   <hr style="margin:24px 0; border-color:#f0ebe4;">
   <p style="text-align:center; color:#aaa; font-size:0.8rem;">
-    书搜搜 · 图书馆动态流转模拟沙盘 v1.0 | 数据源: processed_library_books.csv
+    {% if language == "zh" %}书搜搜 · 图书馆动态流转模拟沙盘 v1.0 | 数据源: processed_library_books.csv{% else %}BookSearch · Library Dynamic Flow Sandbox v1.0 | Data source: processed_library_books.csv{% endif %}
   </p>
 </div>
 
@@ -208,6 +228,32 @@ let logs = {{ snapshot.logs | tojson | safe }};
 let catStats = {{ snapshot.category_stats | tojson | safe }};
 let topBooks = {{ snapshot.top_books | tojson | safe }};
 
+// ── 模拟沙盘中英文分类映射函数 ──
+function getTranslatedCategory(cat) {
+  if ("{{ language }}" === "zh") return cat;
+  if (!cat) return "";
+
+  // 仅精确转换你截图中出现的 14 个分类内容，其他保持不变
+  const mapping = {
+      "自传体小说": "Autobiographical Fiction",
+      "领导学": "Leadership Studies",
+      "自然史": "Natural History",
+      "教育技术": "Educational Technology",
+      "机器学习": "Machine Learning",
+      "投资": "Investment",
+      "长篇小说": "Novel",
+      "美国文学": "American Literature",
+      "能源政策": "Energy Policy",
+      "小说": "Fiction",
+      "人工智能": "Artificial Intelligence",
+      "学术写作": "Academic Writing",
+      "研究方法": "Research Methods",
+      "高等教育": "Higher Education"
+  };
+
+  return mapping[cat] || cat;
+}
+
 // ── 初始化 ──
 document.addEventListener("DOMContentLoaded", function() {
   renderTable(allBooks);
@@ -216,8 +262,10 @@ document.addEventListener("DOMContentLoaded", function() {
   renderTopBooks(topBooks);
   document.getElementById("showCount").textContent = allBooks.length;
   document.getElementById("totalCount").textContent = allBooks.length;
+  
+  let isZh = "{{ language }}" === "zh";
   if (running) {
-    document.getElementById("btnToggle").textContent = "⏸️ 暂停";
+    document.getElementById("btnToggle").textContent = isZh ? "⏸️ 暂停" : "⏸️ Pause";
     startPolling();
   }
   // 速度滑块变化 -> 同步到服务端
@@ -239,7 +287,12 @@ function toggleSim() {
     .then(data => {
       running = data.running;
       const btn = document.getElementById("btnToggle");
-      btn.textContent = running ? "⏸️ 暂停" : "▶️ 运行";
+      let isZh = "{{ language }}" === "zh";
+      if (running) {
+        btn.textContent = isZh ? "⏸️ 暂停" : "⏸️ Pause";
+      } else {
+        btn.textContent = isZh ? "▶️ 运行" : "▶️ Run";
+      }
       if (running) {
         startPolling();
       } else {
@@ -269,6 +322,17 @@ function startPolling() {
       .then(data => updateUI(data.state))
       .catch(() => {});
   }, 800);  // 固定 0.8 秒轮询更新 UI
+}
+
+// ── 英文动作日志清洗函数（如果是英文环境） ──
+function getEnglishLogMsg(e) {
+  let msg = e.msg;
+  if ("{{ language }}" === "zh") return msg;
+  msg = msg.replace(/借阅了图书/g, "borrowed")
+           .replace(/归还了图书/g, "returned")
+           .replace(/巡检了图书馆/g, "inspected the library")
+           .replace(/催还了图书/g, "recalled");
+  return msg;
 }
 
 function stopPolling() {
@@ -311,13 +375,14 @@ function filterTable() {
 
 function renderTable(books) {
   const tbody = document.getElementById("bookTableBody");
+  let isZh = "{{ language }}" === "zh";
   tbody.innerHTML = books.map(b => {
     const statusClass = b.in ? "status-in" : "status-out";
-    const statusText = b.in ? "✅ 在馆" : "📤 借出";
+    const statusText = b.in ? (isZh ? "✅ 在馆" : "✅ Available") : (isZh ? "📤 借出" : "📤 Borrowed");
     return `<tr>
       <td>${escHtml(b["书名"])}</td>
-      <td>${escHtml(b["分类"])}</td>
-      <td>${escHtml(b["作者"])}</td>
+      <td>${escHtml(getTranslatedCategory(b["分类"]))}</td>
+      <td>${escHtml(b["author"] || b["作者"])}</td>
       <td>${escHtml(b["馆藏位置"])}</td>
       <td><span class="status-badge ${statusClass}">${statusText}</span></td>
       <td>${b.borrower ? escHtml(b.borrower) : "—"}</td>
@@ -340,7 +405,7 @@ function renderLogs(logEntries) {
       "admin_return": "log-action-admin",
       "admin_patrol": "log-action-admin"
     }[e.action] || "";
-    parts.push(`<div class="log-entry"><span class="log-time">${ts}</span> <span>${escHtml(e.actor)}</span> <span class="${acClass}">${escHtml(e.msg)}</span></div>`);
+    parts.push(`<div class="log-entry"><span class="log-time">${ts}</span> <span>${escHtml(e.actor)}</span> <span class="${acClass}">${escHtml(getEnglishLogMsg(e))}</span></div>`);
   }
   container.innerHTML = parts.join("");
   container.scrollTop = 0;
@@ -352,7 +417,7 @@ function renderCatStats(stats) {
   tbody.innerHTML = stats.map(c => {
     const pct = c["借出率"];
     return `<tr>
-      <td>${escHtml(c["分类"])}</td>
+      <td>${escHtml(getTranslatedCategory(c["分类"]))}</td>
       <td>${c["总数"]}</td>
       <td>${c["借出"]}</td>
       <td>${c["在馆"]}</td>
@@ -368,11 +433,13 @@ function renderCatStats(stats) {
 function renderTopBooks(books) {
   const tbody = document.getElementById("topBooksBody");
   tbody.innerHTML = books.map(b => {
+    let isZh = "{{ language }}" === "zh";
+    let timesText = isZh ? " 次" : " times";
     return `<tr>
       <td>${escHtml(b["书名"])}</td>
-      <td>${escHtml(b["分类"])}</td>
+      <td>${escHtml(getTranslatedCategory(b["分类"]))}</td>
       <td>${escHtml(b["作者"])}</td>
-      <td><strong>${b["借阅次数"]}</strong> 次</td>
+      <td><strong>${b["借阅次数"]}</strong>${timesText}</td>
     </tr>`;
   }).join("");
 }

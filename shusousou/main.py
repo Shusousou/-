@@ -1,11 +1,11 @@
 """
-书搜�?- 主入口文�?
+书搜搜 - 主入口文件
 启动整个网站服务
 """
 
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
@@ -13,13 +13,13 @@ import os
 from .config import HOST, PORT, DEBUG, SITE_NAME, DEFAULT_LANGUAGE
 from .database.models import init_database
 
-# 获取项目根目�?(shusousou �?D:\shusousou\shusousou)
+# 获取项目根目录 (shusousou，如 D:\shusousou\shusousou)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 创建FastAPI应用
-app = FastAPI(title="书搜�?/ BookSearch")
+app = FastAPI(title="书搜搜 / BookSearch")
 
-# 挂载静态文�?
+# 挂载静态文件
 static_dir = os.path.join(BASE_DIR, "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
@@ -57,6 +57,25 @@ templates = Jinja2Templates(env=jinja_env)
 
 
 # ============================================
+# 中英文语言切换接口
+# ============================================
+@app.get("/set-language")
+async def set_language(request: Request, lang: str):
+    """设置语言并返回来源页面"""
+    # 1. 校验语言参数，防止恶意传入其他字符
+    if lang not in ["zh", "en"]:
+        lang = DEFAULT_LANGUAGE
+        
+    # 2. 获取用户来源页面（HTTP Referer 协议头），如果获取不到则默认返回首页 "/"
+    referer = request.headers.get("referer", "/")
+    response = RedirectResponse(url=referer, status_code=303)
+    
+    # 3. 将语言写入 Cookie，并设置过期时间为 1 年（365天）
+    response.set_cookie(key="language", value=lang, max_age=365*24*60*60)
+    return response
+
+
+# ============================================
 # 首页
 # ============================================
 @app.get("/", response_class=HTMLResponse)
@@ -83,9 +102,9 @@ async def home(request: Request):
 # ============================================
 @app.on_event("startup")
 async def startup():
-    """启动时初始化数据�?""
+    """启动时初始化数据"""
     init_database()
-    print("书搜搜服务已启动�?)
+    print("书搜搜服务已启动")
     print(f"访问地址：http://localhost:{PORT}")
 
 

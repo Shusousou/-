@@ -1,5 +1,3 @@
-
-
 """
 书搜搜 - 论坛模块（终极升级版）
 负责：发帖回帖、双源书评、热搜榜、点赞收藏、书评搜索、高光数据
@@ -33,6 +31,21 @@ templates = Jinja2Templates(env=env)
 
 CATEGORIES = ["计算机", "科幻", "文学", "其他"]
 CATEGORIES_EN = ["Computer", "Sci-Fi", "Literature", "Other"]
+
+
+def translate_category(cat: str, lang: str) -> str:
+    """根据语言动态映射分类标签"""
+    if not cat:
+        return ""
+    if lang == "zh":
+        return cat
+    mapping = {
+        "计算机": "Computer",
+        "科幻": "Sci-Fi",
+        "文学": "Literature",
+        "其他": "Other"
+    }
+    return mapping.get(cat, cat)
 
 
 def get_db():
@@ -159,12 +172,17 @@ CELEBRITY_REVIEWS_MOCK = [
 ]
 
 
-
+# ============================================
+# 1. 书籍热度排行榜（热搜书单）
+# ============================================
 # ============================================
 # 1. 书籍热度排行榜（热搜书单）
 # ============================================
 @router.get("/api/trending")
 async def get_trending_books(request: Request):
+    # 🌟 核心修改点 1：从 Cookie 中获取当前语言
+    lang = request.cookies.get("language", "zh")
+    
     with get_db() as session:
         post_counts = session.query(
             Post.isbn, func.count(Post.id).label("cnt")
@@ -206,7 +224,13 @@ async def get_trending_books(request: Request):
                 lib = lib_results[0]
                 lib_info = {"title_cn": lib.get("title_cn",""), "title": lib.get("title",""), "author": lib.get("author",""), "isbn": lib.get("isbn","")}
             sample_post = session.query(Post).filter(Post.isbn == isbn).order_by(Post.created_at.desc()).first()
-            book_name = lib_info["title_cn"] if lib_info and lib_info["title_cn"] else (sample_post.book_name if sample_post else isbn)
+            
+            # 🌟 核心修改点 2：如果是英文环境且拥有英文书名，则优先使用英文名
+            if lang == "en" and lib_info and lib_info.get("title"):
+                book_name = lib_info["title"]
+            else:
+                book_name = lib_info["title_cn"] if lib_info and lib_info["title_cn"] else (sample_post.book_name if sample_post else isbn)
+                
             book_author = lib_info["author"] if lib_info and lib_info["author"] else (sample_post.author if sample_post else "")
 
             result.append({
@@ -218,13 +242,12 @@ async def get_trending_books(request: Request):
             })
 
         return JSONResponse({"success": True, "trending": result})
-
-
 # ============================================
 # 2. 书评搜索
 # ============================================
 @router.get("/api/search-reviews")
 async def search_reviews(request: Request, q: str = Query("", description="搜索关键词")):
+    lang = request.cookies.get("language", "zh")
     if not q or not q.strip():
         return JSONResponse({"success": True, "results": []})
 
@@ -243,7 +266,8 @@ async def search_reviews(request: Request, q: str = Query("", description="搜�
                 "author": p.author or "",
                 "content": p.content[:150] + ("..." if len(p.content) > 150 else ""),
                 "isbn": p.isbn or "", "review_type": p.review_type or "user",
-                "username": p.user.username if p.user else "匿名",
+                "username": p.user.username if p.user else ("匿名" if lang == "zh" else "Anonymous"),
+                "category": translate_category(p.category, lang),
                 "comment_count": comment_count,
                 "likes_count": p.likes_count or 0,
                 "stars_count": p.stars_count or 0,
@@ -304,6 +328,7 @@ async def toggle_star(request: Request, post_id: int):
 # ============================================
 @router.get("/api/reviews/{isbn}")
 async def get_book_reviews(request: Request, isbn: str):
+    lang = request.cookies.get("language", "zh")
     clean_isbn = isbn.strip().replace("-", "").replace(" ", "")
     with get_db() as session:
         user_posts = session.query(Post).filter(
@@ -315,7 +340,7 @@ async def get_book_reviews(request: Request, isbn: str):
             comment_count = session.query(Comment).filter(Comment.post_id == p.id).count()
             user_reviews.append({
                 "id": p.id, "content": p.content,
-                "username": p.user.username if p.user else "匿名",
+                "username": p.user.username if p.user else ("匿名" if lang == "zh" else "Anonymous"),
                 "user_id": p.user_id,
                 "likes_count": p.likes_count or 0,
                 "stars_count": p.stars_count or 0,
@@ -440,9 +465,10 @@ async def forum_index(request: Request):
             post_list.append({
                 "id": p.id, "book_name": p.book_name, "author": p.author or "",
                 "content": p.content[:100] + ("..." if len(p.content) > 100 else ""),
-                "category": p.category or "", "isbn": p.isbn or "",
+                "category": translate_category(p.category or "", lang),
+                "isbn": p.isbn or "",
                 "review_type": p.review_type or "user",
-                "username": p.user.username if p.user else "匿名",
+                "username": p.user.username if p.user else ("匿名" if lang == "zh" else "Anonymous"),
                 "user_id": p.user_id,
                 "created_at": p.created_at.strftime("%Y-%m-%d %H:%M") if p.created_at else "",
                 "comment_count": comment_count,
@@ -518,9 +544,9 @@ async def post_detail(request: Request, post_id: int):
 
         post_data = {
             "id": post.id, "book_name": post.book_name, "author": post.author or "",
-            "content": post.content, "category": post.category or "", "isbn": post.isbn or "",
+            "content": post.content, "category": translate_category(post.category or "", lang), "isbn": post.isbn or "",
             "review_type": post.review_type or "user",
-            "username": post.user.username if post.user else "匿名",
+            "username": post.user.username if post.user else ("匿名" if lang == "zh" else "Anonymous"),
             "user_id": post.user_id,
             "created_at": post.created_at.strftime("%Y-%m-%d %H:%M") if post.created_at else "",
             "likes_count": post.likes_count or 0,
@@ -538,7 +564,7 @@ async def post_detail(request: Request, post_id: int):
         for c in comments:
             comment_list.append({
                 "id": c.id, "content": c.content,
-                "username": c.user.username if c.user else "匿名",
+                "username": c.user.username if c.user else ("匿名" if lang == "zh" else "Anonymous"),
                 "created_at": c.created_at.strftime("%Y-%m-%d %H:%M") if c.created_at else ""
             })
 

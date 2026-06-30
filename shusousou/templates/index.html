@@ -35,7 +35,9 @@
 
 <div class="features">
     <div class="feature-card">
-        <h3>🤖 AI推荐</h3>
+        <h3>
+            {% if language == "zh" %}🤖 AI推荐{% else %}🤖 AI Recommendation{% endif %}
+        </h3>
         <p>
             {% if language == "zh" %}
                 输入你想看的书，AI为你智能推荐
@@ -45,7 +47,9 @@
         </p>
     </div>
     <div class="feature-card">
-        <h3>💬 好书论坛</h3>
+        <h3>
+            {% if language == "zh" %}💬 好书论坛{% else %}💬 Book Forum{% endif %}
+        </h3>
         <p>
             {% if language == "zh" %}
                 分享你的阅读心得，发现更多好书
@@ -55,7 +59,9 @@
         </p>
     </div>
     <div class="feature-card">
-        <h3>🔄 书籍交换</h3>
+        <h3>
+            {% if language == "zh" %}🔄 书籍交换{% else %}🔄 Book Exchange{% endif %}
+        </h3>
         <p>
             {% if language == "zh" %}
                 看完的书挂上来，和书友交换借阅

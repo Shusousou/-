@@ -69,7 +69,8 @@
     {% else %}
         <p>No books available for borrowing</p>
     {% endif %}
-    <a href="/exchange/new" class="btn btn-primary" style="margin-top:15px;">📤 发布图书</a>
+    <a href="/exchange/new" class="btn btn-primary" style="margin-top:15px;">📤 <!-- 发布图书按钮 -->
+{% if language == "zh" %}发布图书{% else %}List a Book{% endif %}</a>
 </div>
 {% endif %}
 

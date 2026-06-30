@@ -117,14 +117,16 @@
 
     {% if not history %}
     <div style="text-align:center;margin:40px 0 30px;">
-        <h2 style="color:#8B4513;margin-bottom:8px;">📚 告诉我你想看什么书</h2>
-        <p style="color:#999;font-size:0.9em;">可以直接说书名、作者、学科，或者描述你现在的状态</p>
+        <h2 style="color:#8B4513;margin-bottom:8px;">📚 {% if language == "zh" %}告诉我你想看什么书{% else %}Tell me what book you want to read{% endif %}</h2>
+        <p style="color:#999;font-size:0.9em;">{% if language == "zh" %}
+    可以直接说书名、作者、学科，或者描述你现在的状态{% else %}You can search by book name, author, subject, or describe your current status{% endif %}</p>
     </div>
     <form method="post" action="/search/" class="search-box">
         <input type="hidden" name="mode" value="auto">
         <input type="text" name="query" class="search-input"
-               placeholder="例如：我想看机器学习的入门书" value="" required>
-        <button type="submit" class="search-btn">🔍 开始搜书</button>
+               placeholder="{% if language == "zh" %}例如：我想看机器学习的入门书{% else %}e.g. Introduction to Machine Learning{% endif %}"
+ value="" required>
+        <button type="submit" class="search-btn">🔍 {% if language == "zh" %}开始搜书{% else %}Start Searching{% endif %}</button>
     </form>
     {% endif %}
 
