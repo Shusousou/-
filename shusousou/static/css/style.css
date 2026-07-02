@@ -777,6 +777,313 @@ main {
     transform: scale(0.98);
 }
 
+/* ============ 登录页面（毛玻璃卡片） ============ */
+.login-wrapper {
+    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    width: 100%;
+    max-width: 400px;
+    padding: 2.5rem 2rem 2.2rem;
+    border-radius: 36px;
+    box-shadow: 0 20px 40px -12px rgba(0, 20, 30, 0.25),
+                0 8px 24px -6px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: transform 0.2s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-2px);
+}
+
+.login-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.login-header h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: #1a2639;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.login-header h1 i {
+    color: #3b6ea5;
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.login-header .sub {
+    font-size: 0.9rem;
+    color: #5e6f8d;
+    margin-top: 0.3rem;
+    font-weight: 400;
+    border-top: 1px solid rgba(59, 110, 165, 0.15);
+    padding-top: 0.6rem;
+    display: inline-block;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2c3e5a;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.3px;
+}
+
+.input-group label i {
+    margin-right: 8px;
+    color: #3b6ea5;
+    width: 1.2rem;
+    text-align: center;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.85rem 1rem 0.85rem 2.8rem;
+    font-size: 1rem;
+    border: 1.5px solid #dce2ec;
+    border-radius: 60px;
+    background: white;
+    transition: all 0.2s;
+    color: #1e2b3c;
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.input-group input:focus {
+    border-color: #3b6ea5;
+    box-shadow: 0 4px 12px rgba(59, 110, 165, 0.15);
+    background: #ffffff;
+}
+
+.input-group input::placeholder {
+    color: #a5b6cc;
+    font-weight: 300;
+    font-size: 0.95rem;
+}
+
+.input-group .input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 2.55rem;
+    color: #7b8ba3;
+    font-size: 1.1rem;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.input-group input:focus ~ .input-icon,
+.input-group input:focus + .input-icon {
+    color: #3b6ea5;
+}
+
+.row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0.5rem 0 1.8rem 0;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #2c3e5a;
+    cursor: pointer;
+    font-weight: 450;
+}
+
+.remember-me input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid #bcc9dd;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+    background: white;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.remember-me input[type="checkbox"]:checked {
+    background: #3b6ea5;
+    border-color: #3b6ea5;
+}
+
+.remember-me input[type="checkbox"]:checked::after {
+    content: "\f00c";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 0.75rem;
+    color: white;
+    display: block;
+    line-height: 1;
+}
+
+.remember-me input[type="checkbox"]:focus-visible {
+    box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.3);
+}
+
+.forgot-link {
+    font-size: 0.95rem;
+    color: #3b6ea5;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1.5px solid transparent;
+    transition: border-color 0.2s, color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.forgot-link i {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.forgot-link:hover {
+    color: #1f4a7a;
+    border-bottom-color: #1f4a7a;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 0.9rem;
+    background: #1f3a5f;
+    border: none;
+    border-radius: 60px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.25s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 6px 14px rgba(31, 58, 95, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+}
+
+.btn-login i {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.btn-login:hover {
+    background: #143049;
+    box-shadow: 0 8px 18px rgba(31, 58, 95, 0.35);
+    transform: scale(1.01);
+}
+
+.btn-login:active {
+    transform: scale(0.98);
+}
+
+.register-section {
+    text-align: center;
+    margin-top: 1.8rem;
+    font-size: 0.98rem;
+    color: #3d4f6a;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 1.5rem;
+}
+
+.register-link {
+    color: #1f4a7a;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: 0.4rem;
+    padding: 0.2rem 0.8rem;
+    border-radius: 30px;
+    background: rgba(59, 110, 165, 0.08);
+    transition: background 0.2s, color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.register-link i {
+    font-size: 0.8rem;
+}
+
+.register-link:hover {
+    background: rgba(59, 110, 165, 0.18);
+    color: #0f2f4f;
+}
+
+/* 登录页消息提示 */
+.login-card .message {
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.2rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.login-card .message.error {
+    background: #fee9e7;
+    color: #b3403a;
+    border-left: 4px solid #b3403a;
+}
+
+.login-card .message.success {
+    background: #e6f4ea;
+    color: #1e7e34;
+    border-left: 4px solid #1e7e34;
+}
+
+.login-card .message i {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 2rem 1.5rem;
+    }
+    .login-header h1 {
+        font-size: 1.9rem;
+    }
+    .row-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+    .forgot-link {
+        margin-left: 0;
+    }
+}
+
 /* ============ 消息/提示（毛玻璃风格） ============ */
 .message {
     padding: 14px 20px;

@@ -1,8 +1,35 @@
-fastapi==0.115.0       # Web框架：提供路由、请求处理、模板渲染等功能
-uvicorn==0.30.0         # ASGI服务器：负责运行FastAPI应用，处理HTTP请求
-jinja2==3.1.4           # 模板引擎：在HTML中嵌入Python变量（如 {{ book.title }}）
-python-multipart==0.0.9 # 表单数据解析：让FastAPI能接收POST表单（Form()）
-requests==2.32.0        # HTTP请求库：用于调用DeepSeek AI API
-sqlalchemy==2.0.35      # ORM框架：管理数据库表结构、增删改查操作
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anyio==4.14.1
+certifi==2026.6.17
+charset-normalizer==3.4.7
+click==8.4.2
+colorama==0.4.6
+fastapi==0.115.0
+greenlet==3.5.3
+h11==0.16.0
+idna==3.18
+Jinja2==3.1.4
+jiter==0.15.0
+MarkupSafe==3.0.3
+numpy>=2.0.0
+openai==2.43.0
+packaging==26.0
+pandas>=2.0.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+python-dateutil==2.9.0.post0
+python-multipart==0.0.9
+requests==2.32.0
+setuptools==82.0.1
+six==1.17.0
+SQLAlchemy==2.0.35
+starlette==0.38.6
+typing-inspection==0.4.2
+typing_extensions==4.15.0
+tzdata==2026.2
+urllib3==2.7.0
+uvicorn==0.30.0
+wheel==0.47.0
 
 
