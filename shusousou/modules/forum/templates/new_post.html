@@ -5,7 +5,8 @@
 <div class="form-container">
     <h2>{% if language == "zh" %}✏️ 发表书评{% else %}✏️ Write a Review{% endif %}</h2>
     
-    <form method="post" action="/forum/new">
+    <!-- 🌟 去掉开头的 / 改为相对路径 -->
+    <form method="post" action="new">
         <div class="form-group">
             <label for="book_name">
                 {% if language == "zh" %}📖 书名 *{% else %}📖 Book Name *{% endif %}

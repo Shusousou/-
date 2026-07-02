@@ -35,8 +35,6 @@ pip install -r requirements.txt
 ### 3. 配置API Key
 打开 `shusousou/config.py`，填入你的DeepSeek API Key。
 
-### 注意：要安装pandas包    pip install pandas
-
 ### 4. 运行
 ```bash
 python shusousou/main.py     #我前面那个用不了，后面这个可以：python -m shusousou.main

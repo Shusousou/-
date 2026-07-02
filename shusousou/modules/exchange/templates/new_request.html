@@ -12,7 +12,8 @@
         {% endif %}
     </p>
     
-    <form method="post" action="/exchange/request/new">
+    <!-- 🌟 去掉开头的 / 改为相对路径 -->
+    <form method="post" action="new">
         <div class="form-group">
             <label for="description">
                 {% if language == "zh" %}📝 需求描述 *{% else %}📝 Description *{% endif %}
@@ -27,7 +28,8 @@
     </form>
     
     <div style="margin-top:15px;">
-        <a href="/exchange/my-requests" class="btn btn-secondary">
+        <!-- 🌟 改为相对父目录的路径 -->
+        <a href="../my-requests" class="btn btn-secondary">
             {% if language == "zh" %}📋 查看我的需求{% else %}📋 View My Requests{% endif %}
         </a>
     </div>

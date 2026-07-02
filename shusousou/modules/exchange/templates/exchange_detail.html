@@ -89,7 +89,8 @@ function closeContact() {
         
         <!-- 发送消息 -->
         {% if book.status == "available" %}
-        <form method="post" action="/exchange/{{ book.id }}/message" style="margin-top:15px;" id="message-form">
+        <!-- 🌟 去掉开头的 / 改为相对路径 -->
+        <form method="post" action="{{ book.id }}/message" style="margin-top:15px;" id="message-form">
             <div class="form-group">
                 <textarea name="content" rows="3" required
                           placeholder="{{ language == "zh" and '写下你想说的话...' or 'Write your message...' }}"
@@ -103,7 +104,8 @@ function closeContact() {
         
         <!-- 发布者可以下架 -->
         {% if current_user.id == book.owner_id and book.status == "available" %}
-        <form method="post" action="/exchange/{{ book.id }}/close" style="margin-top:15px;">
+        <!-- 🌟 去掉开头的 / 改为相对路径 -->
+        <form method="post" action="{{ book.id }}/close" style="margin-top:15px;">
             <button type="submit" class="btn btn-secondary" style="background:#f44336;color:#fff;"
                     onclick="return confirm('{{ language == "zh" and "确定下架？" or "Close this listing?" }}')">
                 {{ language == "zh" and "下架图书" or "Close Listing" }}
@@ -115,7 +117,8 @@ function closeContact() {
     <!-- 邮件通知开关（仅图书主人可见） -->
     {% if current_user.id == book.owner_id %}
     <div style="margin-top:25px;background:#f9f6f0;padding:12px 15px;border-radius:8px;display:flex;align-items:center;gap:10px;">
-        <form method="post" action="/exchange/{{ book.id }}/toggle-notify" style="display:flex;align-items:center;gap:8px;">
+        <!-- 🌟 去掉开头的 / 改为相对路径 -->
+        <form method="post" action="{{ book.id }}/toggle-notify" style="display:flex;align-items:center;gap:8px;">
             <label style="cursor:pointer;display:flex;align-items:center;gap:6px;">
                 <input type="checkbox" name="email_notify" value="true" 
                        onchange="this.form.submit()" 
@@ -148,7 +151,8 @@ function closeContact() {
     {% endif %}
     
     <div style="margin-top:20px;">
-        <a href="/exchange/" class="btn btn-secondary">
+        <!-- 🌟 返回列表改为相对父路径的 ./ -->
+        <a href="./" class="btn btn-secondary">
             ← {{ language == "zh" and "返回列表" or "Back to List" }}
         </a>
     </div>

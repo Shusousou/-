@@ -5,13 +5,14 @@
 <div class="forum-header">
     <h2>{% if language == "zh" %}📖 师生互助借阅{% else %}📖 Book Sharing{% endif %}</h2>
     <div class="forum-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="/exchange/new" class="btn btn-primary">
+        <!-- 🌟 去掉开头的 / 改为相对路径 -->
+        <a href="new" class="btn btn-primary">
             {% if language == "zh" %}📤 发布图书{% else %}📤 List a Book{% endif %}
         </a>
-        <a href="/exchange/request/new" class="btn btn-primary" style="background:#5D8AA8;">
+        <a href="request/new" class="btn btn-primary" style="background:#5D8AA8;">
             {% if language == "zh" %}🎯 挂需求{% else %}🎯 Request{% endif %}
         </a>
-        <a href="/exchange/my-requests" class="btn btn-secondary">
+        <a href="my-requests" class="btn btn-secondary">
             {% if language == "zh" %}📋 我的需求{% else %}📋 My Requests{% endif %}
             {% if my_matches > 0 %}<span style="background:#f44336;color:#fff;padding:1px 6px;border-radius:10px;font-size:0.8em;margin-left:5px;">{{ my_matches }}</span>{% endif %}
         </a>
@@ -20,7 +21,8 @@
 
 <!-- 搜索 -->
 <div style="margin-bottom:20px;">
-    <form method="get" action="/exchange/" style="display:flex;gap:5px;">
+    <!-- 🌟 去掉 action 中的绝对路径，留空代表自动提交给当前页面 -->
+    <form method="get" action="" style="display:flex;gap:5px;">
         <input type="text" name="q" class="search-input" style="flex:1;padding:8px 15px;"
                placeholder="{% if language == "zh" %}搜索可借图书...{% else %}Search available books...{% endif %}"
                value="{{ search_q }}">
@@ -35,7 +37,8 @@
 <div class="forum-list">
     {% for book in books %}
     <div class="forum-post-card">
-        <a href="/exchange/{{ book.id }}" style="text-decoration:none;">
+        <!-- 🌟 去掉跳转详情链接开头的 / 改为相对路径 -->
+        <a href="{{ book.id }}" style="text-decoration:none;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div>
                     <h3 style="margin:0 0 5px;color:#8B4513;">📘 {{ book.book_name }}</h3>
@@ -69,7 +72,8 @@
     {% else %}
         <p>No books available for borrowing</p>
     {% endif %}
-    <a href="/exchange/new" class="btn btn-primary" style="margin-top:15px;">📤 <!-- 发布图书按钮 -->
+    <!-- 🌟 去掉开头的 / 改为相对路径 -->
+    <a href="new" class="btn btn-primary" style="margin-top:15px;">📤 <!-- 发布图书按钮 -->
 {% if language == "zh" %}发布图书{% else %}List a Book{% endif %}</a>
 </div>
 {% endif %}

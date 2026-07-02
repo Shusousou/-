@@ -5,7 +5,8 @@
 <div class="form-container">
     <h2>{% if language == "zh" %}📤 发布图书（借出）{% else %}📤 List a Book{% endif %}</h2>
     
-    <form method="post" action="/exchange/new">
+    <!-- 🌟 去掉开头的 / 改为相对路径 -->
+    <form method="post" action="new">
         <div class="form-group">
             <label for="book_name">
                 {% if language == "zh" %}📘 书名 *{% else %}📘 Book Name *{% endif %}
@@ -28,7 +29,7 @@
             </label>
             <div style="display:flex;gap:5px;margin-bottom:5px;">
                 <textarea id="requirements" name="requirements" rows="3" style="flex:1;"
-                          placeholder="{% if language == "zh" %}例如：希望一周内归还、不要乱涂乱画...{% else %}e.g. Return within one week...{% endif %}"></textarea>
+                          placeholder="{% if language == "zh" %}希望一周内归还、不要乱涂乱画...{% else %}e.g. Return within one week...{% endif %}"></textarea>
             </div>
         </div>
         
@@ -97,7 +98,8 @@ function aiGenerate() {
     
     document.getElementById("ai-loading").style.display = "block";
     
-    fetch("/exchange/ai-generate-rules", {
+    // 🌟 接口请求去掉开头的 / 改为相对路径
+    fetch("ai-generate-rules", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({book_name: bookName, author: author})

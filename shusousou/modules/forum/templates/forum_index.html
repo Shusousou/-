@@ -5,7 +5,8 @@
 <div class="forum-header">
     <h2>{% if language == "zh" %}📚 好书论坛{% else %}📚 Book Forum{% endif %}</h2>
     <div class="forum-actions">
-        <a href="/forum/new" class="btn btn-primary">
+        <!-- 🌟 1. 去掉开头的 / 改为相对路径 -->
+        <a href="new" class="btn btn-primary">
             {% if language == "zh" %}✏️ 发帖{% else %}✏️ New Post{% endif %}
         </a>
     </div>
@@ -15,16 +16,19 @@
     <div class="forum-main-column">
         <div class="forum-toolbar">
             <div class="forum-category-group">
-                <a href="/forum/" class="btn btn-secondary forum-pill-btn {% if not current_category %}active{% endif %}">
+                <!-- 🌟 2. 全部按钮改为相对父目录的 ./ -->
+                <a href="./" class="btn btn-secondary forum-pill-btn {% if not current_category %}active{% endif %}">
                     {% if language == "zh" %}全部{% else %}All{% endif %}
                 </a>
                 {% for cat in categories %}
-                <a href="/forum/?category={{ cat }}" class="btn btn-secondary forum-pill-btn {% if current_category == cat %}active{% endif %}">
+                <!-- 🌟 3. 各分类链接改为相对父目录的 ./ -->
+                <a href="./?category={{ cat }}" class="btn btn-secondary forum-pill-btn {% if current_category == cat %}active{% endif %}">
                     {{ cat }}
                 </a>
                 {% endfor %}
             </div>
-            <form method="get" action="/forum/" class="forum-search-form">
+            <!-- 🌟 4. 搜索表单的 action 去掉 / 留空代表自提交 -->
+            <form method="get" action="" class="forum-search-form">
                 <input type="text" name="q" class="search-input"
                        placeholder="{% if language == "zh" %}搜书名、作者或书评...{% else %}Search book, author or review...{% endif %}"
                        value="{{ search_q }}">
@@ -45,7 +49,8 @@
             <article class="forum-post-card">
                 <div class="forum-post-head">
                     <div>
-                        <a href="/forum/{{ post.id }}" class="forum-post-title-link">
+                        <!-- 🌟 5. 书评详情链接去掉开头的 / 改为相对路径 -->
+                        <a href="{{ post.id }}" class="forum-post-title-link">
                             <h3>📖 {{ post.book_name }}</h3>
                         </a>
                         <div class="forum-post-meta-row">
@@ -95,7 +100,8 @@
             {% else %}
                 <p>No matching review posts yet. Try another keyword.</p>
             {% endif %}
-            <a href="/forum/new" class="btn btn-primary">✏️ {% if language == "zh" %}发帖{% else %}New post{% endif %}</a>
+            <!-- 🌟 6. 去掉开头的 / 改为相对路径 -->
+            <a href="new" class="btn btn-primary">✏️ {% if language == "zh" %}发帖{% else %}New post{% endif %}</a>
         </div>
         {% endif %}
     </div>

@@ -39,13 +39,15 @@
         
         <!-- 点赞 + 收藏 -->
         <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;display:flex;gap:12px;align-items:center;">
-            <form method="post" action="/forum/{{ post.id }}/like" style="display:inline;">
+            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+            <form method="post" action="{{ post.id }}/like" style="display:inline;">
                 <button type="submit" class="btn {% if liked %}btn-primary{% else %}btn-secondary{% endif %}" 
                         style="padding:5px 15px;cursor:pointer;">
                     {% if liked %}❤️{% else %}🤍{% endif %} {{ post.likes_count }}
                 </button>
             </form>
-            <form method="post" action="/forum/{{ post.id }}/star" style="display:inline;">
+            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+            <form method="post" action="{{ post.id }}/star" style="display:inline;">
                 <button type="submit" class="btn {% if starred %}btn-primary{% else %}btn-secondary{% endif %}" 
                         style="padding:5px 15px;cursor:pointer;">
                     {% if starred %}⭐{% else %}☆{% endif %} {{ post.stars_count and post.stars_count or 0 }}
@@ -81,7 +83,8 @@
         {% endif %}
         
         <!-- 评论框 -->
-        <form method="post" action="/forum/{{ post.id }}/comment" style="margin-top:15px;">
+        <!-- 🌟 去掉开头的 / 改为相对路径 -->
+        <form method="post" action="{{ post.id }}/comment" style="margin-top:15px;">
             <div class="form-group">
                 <textarea name="content" rows="3" required
                           placeholder="{% if language == "zh" %}写下你的观点...{% else %}Write your comment...{% endif %}"
@@ -95,7 +98,8 @@
     
     <!-- 返回 -->
     <div style="margin-top:20px;">
-        <a href="/forum/" class="btn btn-secondary">
+        <!-- 🌟 返回列表改为相对父路径的 ./ -->
+        <a href="./" class="btn btn-secondary">
             {% if language == "zh" %}← 返回论坛{% else %}← Back to Forum{% endif %}
         </a>
     </div>

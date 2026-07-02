@@ -267,7 +267,8 @@
             {{ register_success }}
         </div>
         {% else %}
-        <form method="post" action="/auth/register">
+        <!-- 🌟 1. 表单提交 action 去掉 /auth 缩短为相对当前目录的 register -->
+        <form method="post" action="register">
             <div class="input-group">
                 <label for="reg_username"><i class="fas fa-user"></i> 
                     {% if language == "zh" %}用户名{% else %}Username{% endif %}
@@ -330,7 +331,8 @@
             <span>
                 {% if language == "zh" %}已有账号？{% else %}Already have an account?{% endif %}
             </span>
-            <a href="/auth/login" class="login-link">
+            <!-- 🌟 2. 立即登录跳转链接去掉开头的 / 改为相对路径 -->
+            <a href="login" class="login-link">
                 <i class="fas fa-sign-in-alt"></i> 
                 {% if language == "zh" %}立即登录{% else %}Login{% endif %}
             </a>

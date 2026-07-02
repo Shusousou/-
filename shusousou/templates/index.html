@@ -21,13 +21,14 @@
         {% endif %}
     </p>
     <div class="hero-actions">
-        <a href="/search" class="btn btn-primary">
+        <!-- 🌟 首页所有核心超链接去掉了开头的 / 改为相对路径 -->
+        <a href="search" class="btn btn-primary">
             {% if language == "zh" %}🔍 开始搜书{% else %}🔍 Start Searching{% endif %}
         </a>
-        <a href="/forum" class="btn btn-secondary">
+        <a href="forum" class="btn btn-secondary">
             {% if language == "zh" %}💬 逛逛论坛{% else %}💬 Visit Forum{% endif %}
         </a>
-        <a href="/exchange" class="btn btn-secondary">
+        <a href="exchange" class="btn btn-secondary">
             {% if language == "zh" %}🔄 书籍交换{% else %}🔄 Book Exchange{% endif %}
         </a>
     </div>

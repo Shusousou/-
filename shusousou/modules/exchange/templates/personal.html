@@ -35,7 +35,8 @@
             {% endif %}
         </div>
         <div id="contactEdit" style="display:none;">
-            <form method="post" action="/exchange/update-contact" style="display:flex;gap:8px;align-items:center;">
+            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+            <form method="post" action="update-contact" style="display:flex;gap:8px;align-items:center;">
                 <select name="contact_type" style="padding:8px;border:1px solid #ddd;border-radius:6px;">
                     <option value="\u5fae\u4fe1" {% if current_user.contact_type == "\u5fae\u4fe1" %}selected{% endif %}>WeChat</option>
                     <option value="\u624b\u673a\u53f7" {% if current_user.contact_type == "\u624b\u673a\u53f7" %}selected{% endif %}>{% if language == "zh" %}手机号{% else %}Phone{% endif %}</option>
@@ -64,7 +65,8 @@
         </div>
         <div class="stat-card" style="background:#fff;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
             <i class="fas fa-comments" style="font-size:28px;color:#8B4513;"></i>
-            <h3 style="margin:8px 0 0 0;font-size:28px;"><a href="/forum" style="color:#8B4513;text-decoration:none;">{% if language == "zh" %}去论坛{% else %}Forum{% endif %}</a></h3>
+            <!-- 🌟 去掉开头的 / 改为相对父目录路径 -->
+            <h3 style="margin:8px 0 0 0;font-size:28px;"><a href="../forum" style="color:#8B4513;text-decoration:none;">{% if language == "zh" %}去论坛{% else %}Forum{% endif %}</a></h3>
             <p style="margin:4px 0 0 0;color:#888;font-size:0.9em;">{% if language == "zh" %}论坛入口{% else %}Forum Entry{% endif %}</p>
         </div>
     </div>
@@ -89,7 +91,8 @@
                     {% for book in my_books %}
                     <tr style="border-bottom:1px solid #eee;">
                         <td style="padding:10px;">
-                            <a href="/exchange/detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;font-weight:bold;">
+                            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                            <a href="detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;font-weight:bold;">
                                 {{ book.book_name }}
                             </a>
                         </td>
@@ -102,12 +105,14 @@
                             {% endif %}
                         </td>
                         <td style="padding:10px;text-align:center;">
-                            <a href="/exchange/detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;font-weight:bold;">
+                            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                            <a href="detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;font-weight:bold;">
                                 {{ book_matches.get(book.id, 0) }}
                             </a>
                         </td>
                         <td style="padding:10px;text-align:center;">
-                            <a href="/exchange/detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;">
+                            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                            <a href="detail/{{ book.id }}" style="color:#8B4513;text-decoration:none;">
                                 <i class="fas fa-eye"></i> {% if language == "zh" %}查看{% else %}View{% endif %}
                             </a>
                         </td>
@@ -119,7 +124,8 @@
         {% else %}
         <p style="color:#999;text-align:center;padding:30px 0;">
             <i class="fas fa-inbox" style="font-size:40px;display:block;margin-bottom:10px;"></i>
-            {% if language == "zh" %}还没有发布过图书，<a href="/exchange/new" style="color:#8B4513;">去发布</a>{% else %}No books yet, <a href="/exchange/new" style="color:#8B4513;">list one</a>{% endif %}
+            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+            {% if language == "zh" %}还没有发布过图书，<a href="new" style="color:#8B4513;">去发布</a>{% else %}No books yet, <a href="new" style="color:#8B4513;">list one</a>{% endif %}
         </p>
         {% endif %}
     </div>
@@ -130,36 +136,37 @@
         
         {% if my_requests %}
         <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-                <thead>
-                    <tr style="background:#f5f0eb;">
-                        <th style="padding:10px;text-align:left;">{% if language == "zh" %}需求内容{% else %}Description{% endif %}</th>
-                        <th style="padding:10px;text-align:center;">{% if language == "zh" %}状态{% else %}Status{% endif %}</th>
-                        <th style="padding:10px;text-align:center;">{% if language == "zh" %}操作{% else %}Actions{% endif %}</th>
-                    </tr>
-                </thead>
+            <table>
+                <thead><tr>
+                    <th>{% if language == "zh" %}需求内容{% else %}Request{% endif %}</th>
+                    <th>{% if language == "zh" %}状态{% else %}Status{% endif %}</th>
+                    <th>{% if language == "zh" %}操作{% else %}Actions{% endif %}</th>
+                </tr></thead>
                 <tbody>
-                    {% for req in my_requests %}
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:10px;">{{ req.description[:50] }}{% if req.description|length > 50 %}...{% endif %}</td>
-                        <td style="padding:10px;text-align:center;">
+                    {% for req in requests %}
+                    <tr>
+                        <td>{{ req.description[:50] }}{% if req.description|length > 50 %}...{% endif %}</td>
+                        <td>
                             {% if req.is_active %}
-                                <span style="color:#27ae60;">{% if language == "zh" %}开启{% else %}Active{% endif %}</span>
+                                <span style="color:#2e7d32;">✅ {% if language == "zh" %}活跃中{% else %}Active{% endif %}</span>
                             {% else %}
-                                <span style="color:#999;">{% if language == "zh" %}关闭{% else %}Closed{% endif %}</span>
+                                <span style="color:#999;">🔒 {% if language == "zh" %}已关闭{% else %}Closed{% endif %}</span>
                             {% endif %}
                         </td>
-                        <td style="padding:10px;text-align:center;">
+                        <td style="text-align:center;">
                             {% if req.is_active %}
-                            <a href="/exchange/request/{{ req.id }}/toggle" style="color:#e74c3c;text-decoration:none;font-size:0.85em;" onclick="return confirm('{% if language == "zh" %}确认关闭此需求？{% else %}Close this request?{% endif %}')">
+                            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                            <a href="request/{{ req.id }}/toggle" style="color:#e74c3c;text-decoration:none;font-size:0.85em;" onclick="return confirm('{% if language == "zh" %}确认关闭此需求？{% else %}Close this request?{% endif %}')">
                                 {% if language == "zh" %}关闭{% else %}Close{% endif %}
                             </a>
                             {% else %}
-                            <a href="/exchange/request/{{ req.id }}/toggle" style="color:#27ae60;text-decoration:none;font-size:0.85em;">
+                            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                            <a href="request/{{ req.id }}/toggle" style="color:#27ae60;text-decoration:none;font-size:0.85em;">
                                 {% if language == "zh" %}开启{% else %}Enable{% endif %}
                             </a>
                             {% endif %}
-                            | <a href="/exchange/request/{{ req.id }}/delete" style="color:#e74c3c;text-decoration:none;font-size:0.85em;" onclick="return confirm('{% if language == "zh" %}确认删除？{% else %}Delete?{% endif %}')">
+                            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                            | <a href="request/{{ req.id }}/delete" style="color:#e74c3c;text-decoration:none;font-size:0.85em;" onclick="return confirm('{% if language == "zh" %}确认删除？{% else %}Delete?{% endif %}')">
                                 {% if language == "zh" %}删除{% else %}Delete{% endif %}
                             </a>
                         </td>
@@ -171,7 +178,8 @@
         {% else %}
         <p style="color:#999;text-align:center;padding:30px 0;">
             <i class="fas fa-inbox" style="font-size:40px;display:block;margin-bottom:10px;"></i>
-            {% if language == "zh" %}还没有发布需求，<a href="/exchange/new-request" style="color:#8B4513;">去发布</a>{% else %}No requests yet, <a href="/exchange/new-request" style="color:#8B4513;">post one</a>{% endif %}
+            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+            {% if language == "zh" %}还没有发布需求，<a href="new-request" style="color:#8B4513;">去发布</a>{% else %}No requests yet, <a href="new-request" style="color:#8B4513;">post one</a>{% endif %}
         </p>
         {% endif %}
     </div>

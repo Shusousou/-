@@ -8,12 +8,14 @@
             {% if language == "zh" %}🎯 我的需求{% else %}🎯 My Requests{% endif %}
         </h2>
         <div style="display:flex;gap:8px;">
-            <form method="post" action="/exchange/match-all" style="display:inline;">
+            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+            <form method="post" action="match-all" style="display:inline;">
                 <button type="submit" class="btn btn-primary" style="background:#5D8AA8;">
                     {% if language == "zh" %}🔍 全部匹配{% else %}🔍 Match All{% endif %}
                 </button>
             </form>
-            <a href="/exchange/request/new" class="btn btn-primary">
+            <!-- 🌟 去掉开头的 / 改为相对路径 -->
+            <a href="request/new" class="btn btn-primary">
                 {% if language == "zh" %}+ 挂新需求{% else %}+ New Request{% endif %}
             </a>
         </div>
@@ -36,20 +38,23 @@
                 </div>
                 <div style="display:flex;gap:5px;margin-left:10px;">
                     {% if req.is_active %}
-                    <form method="post" action="/exchange/request/{{ req.id }}/close">
+                    <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                    <form method="post" action="request/{{ req.id }}/close">
                         <button type="submit" class="btn btn-secondary" style="padding:3px 10px;font-size:0.85em;"
                                 onclick="return confirm('{% if language == "zh" %}关闭需求后，AI将不会再自动匹配你的需求和新书。如需继续匹配，后续可手动重新开启。{% else %}After closing, AI will no longer match your request with new books. You can reopen it manually later.{% endif %}')">
                             {% if language == "zh" %}关闭{% else %}Close{% endif %}
                         </button>
                     </form>
                     {% else %}
-                    <form method="post" action="/exchange/request/{{ req.id }}/reopen">
+                    <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                    <form method="post" action="request/{{ req.id }}/reopen">
                         <button type="submit" class="btn btn-primary" style="padding:3px 10px;font-size:0.85em;background:#2e7d32;color:#fff;border:none;border-radius:4px;cursor:pointer;">
                             {% if language == "zh" %}开启{% else %}Reopen{% endif %}
                         </button>
                     </form>
                     {% endif %}
-                    <form method="post" action="/exchange/request/{{ req.id }}/delete">
+                    <!-- 🌟 去掉开头的 / 改为相对路径 -->
+                    <form method="post" action="request/{{ req.id }}/delete">
                         <button type="submit" class="btn btn-danger" style="padding:3px 10px;font-size:0.85em;background:#c62828;color:#fff;border:none;border-radius:4px;cursor:pointer;"
                                 onclick="return confirm('{% if language == "zh" %}确定删除此需求？此操作不可恢复。{% else %}Delete this request? This cannot be undone.{% endif %}')">
                             {% if language == "zh" %}删除{% else %}Delete{% endif %}
@@ -65,7 +70,8 @@
                 </div>
                 {% for match in req.matches %}
                 <div style="background:#f5f0eb;padding:8px 12px;border-radius:6px;margin-bottom:5px;">
-                    <a href="/exchange/{{ match.book_id }}" style="text-decoration:none;">
+                    <!-- 🌟 去掉开头的 / 改为相对路径，由于在 /exchange/my-requests 下，返回单书详情应该通过父目录返回，此处改为：../{{ match.book_id }} -->
+                    <a href="../{{ match.book_id }}" style="text-decoration:none;">
                         <strong style="color:#8B4513;">📘 {{ match.book_name }}</strong>
                         {% if match.author %}<span style="color:#666;font-size:0.9em;"> - {{ match.author }}</span>{% endif %}
                     </a>
@@ -82,14 +88,16 @@
     {% else %}
     <div style="text-align:center;padding:40px;color:#999;">
         <p>{% if language == "zh" %}还没有挂过需求{% else %}No requests yet{% endif %}</p>
-        <a href="/exchange/request/new" class="btn btn-primary" style="margin-top:15px;">
+        <!-- 🌟 去掉开头的 / 改为相对路径 -->
+        <a href="request/new" class="btn btn-primary" style="margin-top:15px;">
             {% if language == "zh" %}🎯 挂一个需求{% else %}🎯 Submit a Request{% endif %}
         </a>
     </div>
     {% endif %}
     
     <div style="margin-top:20px;">
-        <a href="/exchange/" class="btn btn-secondary">← {% if language == "zh" %}返回借阅列表{% else %}Back to Book List{% endif %}</a>
+        <!-- 🌟 返回列表改为相对父路径的 ./ -->
+        <a href="./" class="btn btn-secondary">← {% if language == "zh" %}返回借阅列表{% else %}Back to Book List{% endif %}</a>
     </div>
 </div>
 
